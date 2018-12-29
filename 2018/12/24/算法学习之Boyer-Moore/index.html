@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.6.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.6.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.6.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '6.6.0',
+    sidebar: {"position":"left","display":"remove","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="Boyer-Moore算法网上的介绍比较多、比较详细，所以这里仅作为简单记录。该算法是基于后缀的字符串匹配算法，相较于KMP算法等基于前缀的算法来说，理论上效率是更高的。但实际上因为其匹配方式，主要是通过坏字符表、好后缀表进行跳转的，而对于很长的，或者缺少回文形式内容的模式串来说，这两个表的计算工作量会很大，所以在特殊情况下并不一定适用。 老规矩，代码实现直接跳转至最后一章。 1. 基于后缀基于后">
+<meta name="keywords" content="Python,算法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="算法学习之Boyer-Moore">
+<meta property="og:url" content="https://benarvin.github.io/2018/12/24/算法学习之Boyer-Moore/index.html">
+<meta property="og:site_name" content="BenArvin&#39;s blog">
+<meta property="og:description" content="Boyer-Moore算法网上的介绍比较多、比较详细，所以这里仅作为简单记录。该算法是基于后缀的字符串匹配算法，相较于KMP算法等基于前缀的算法来说，理论上效率是更高的。但实际上因为其匹配方式，主要是通过坏字符表、好后缀表进行跳转的，而对于很长的，或者缺少回文形式内容的模式串来说，这两个表的计算工作量会很大，所以在特殊情况下并不一定适用。 老规矩，代码实现直接跳转至最后一章。 1. 基于后缀基于后">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2018-12-29T08:40:36.127Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="算法学习之Boyer-Moore">
+<meta name="twitter:description" content="Boyer-Moore算法网上的介绍比较多、比较详细，所以这里仅作为简单记录。该算法是基于后缀的字符串匹配算法，相较于KMP算法等基于前缀的算法来说，理论上效率是更高的。但实际上因为其匹配方式，主要是通过坏字符表、好后缀表进行跳转的，而对于很长的，或者缺少回文形式内容的模式串来说，这两个表的计算工作量会很大，所以在特殊情况下并不一定适用。 老规矩，代码实现直接跳转至最后一章。 1. 基于后缀基于后">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="BenArvin's blog" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="https://benarvin.github.io/2018/12/24/算法学习之Boyer-Moore/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>算法学习之Boyer-Moore | BenArvin's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">BenArvin's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">No code, no bug. No deploy, no error.</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://benarvin.github.io/2018/12/24/算法学习之Boyer-Moore/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ben Arvin">
+      <meta itemprop="description" content="No code, no bug. No deploy, no error.">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="BenArvin's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">算法学习之Boyer-Moore
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-12-24 22:00:00" itemprop="dateCreated datePublished" datetime="2018-12-24T22:00:00+08:00">2018-12-24</time>
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Boyer-Moore算法网上的介绍比较多、比较详细，所以这里仅作为简单记录。该算法是基于后缀的字符串匹配算法，相较于KMP算法等基于前缀的算法来说，理论上效率是更高的。但实际上因为其匹配方式，主要是通过坏字符表、好后缀表进行跳转的，而对于很长的，或者缺少回文形式内容的模式串来说，这两个表的计算工作量会很大，所以在特殊情况下并不一定适用。</p>
+<p>老规矩，代码实现直接跳转至最后一章。</p>
+<h1 id="1-基于后缀"><a href="#1-基于后缀" class="headerlink" title="1. 基于后缀"></a>1. 基于后缀</h1><p>基于后缀的意思，就是匹配的时候，是从后向前进行匹配的。用模式串<code>FGFAEFG</code>举例子，匹配的时候，是从后往前的，也就是G-&gt;F-&gt;E-&gt;A-&gt;F-&gt;G-&gt;F的顺序。</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F</td>
+<td>G</td>
+<td>F</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>A</td>
+<td>H</td>
+<td>I</td>
+<td>J</td>
+<td>K</td>
+<td>L</td>
+</tr>
+<tr>
+<td>F</td>
+<td>G</td>
+<td>F</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+</tr>
+</tbody>
+</table>
+<p>可以明显的看出，相较于基于前缀的搜索方式来说，这种搜索方式，能更快的确定不匹配情况，所以效率也相对应的更高。</p>
+<h1 id="2-坏字符表"><a href="#2-坏字符表" class="headerlink" title="2. 坏字符表"></a>2. 坏字符表</h1><p>还是用模式串<code>FGFAEFG</code>举例子，当进行下面的匹配的时候。</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>F</td>
+<td>F</td>
+<td>G</td>
+<td>H</td>
+<td>I</td>
+<td>J</td>
+<td>K</td>
+<td>L</td>
+</tr>
+<tr>
+<td>F</td>
+<td>G</td>
+<td>F</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+</tr>
+</tbody>
+</table>
+<p>目前不匹配的字符是第五位字符F，我们称其为坏字符。在模式串中的其他位置，F也是存在的，分别位于第0位和第2位。那么我们取最右侧的F，也就是第2位。移动模式串，使得第2位的F，和刚才内容串中的F相对应，也就是下面这样。</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>F</td>
+<td>F</td>
+<td>G</td>
+<td>H</td>
+<td>I</td>
+<td>J</td>
+<td>K</td>
+<td>L</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>F</td>
+<td>G</td>
+<td>F</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+</tr>
+</tbody>
+</table>
+<p>此时我们再从后向前进行匹配，不匹配的字符是I，但模式串里没有I出现，所以我们直接移动模式串的位置越过I，就像下面这样。</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+<th>12</th>
+<th>13</th>
+<th>14</th>
+<th>15</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>F</td>
+<td>F</td>
+<td>G</td>
+<td>H</td>
+<td>I</td>
+<td>J</td>
+<td>K</td>
+<td>L</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>F</td>
+<td>G</td>
+<td>F</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+</tr>
+</tbody>
+</table>
+<p>这时，因为模式串的位置，已经超出了内容串，所以我们可以认为不再可能匹配到了，因此查找结束。</p>
+<p>相应的的，坏字符表的构造方式就清楚了，简而言之就是找出模式串中，每个字符重复出现的位置。跳转的时候，就是移动模式串，使得坏字符能够对应上，刚才找到的其他重复出现的位置。如果找不到，那就直接跃过整个模式串的长度。</p>
+<h1 id="3-好后缀表"><a href="#3-好后缀表" class="headerlink" title="3. 好后缀表"></a>3. 好后缀表</h1><p>还是用模式串<code>FGFAEFG</code>举例子，好后缀规则的情况有两种。</p>
+<h3 id="1-全匹配情况"><a href="#1-全匹配情况" class="headerlink" title="1) 全匹配情况"></a>1) 全匹配情况</h3><p>如果匹配时的情况是下面这样:</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>G</td>
+<td>H</td>
+<td>I</td>
+<td>J</td>
+<td>K</td>
+<td>L</td>
+</tr>
+<tr>
+<td>F</td>
+<td>G</td>
+<td>F</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+</tr>
+</tbody>
+</table>
+<p>已经匹配成功的字符串是G，而在模式串中，G还出现在位置1处，所以此时移动模式串，将位置1处的G，和内容串中的G对齐。</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>G</td>
+<td>H</td>
+<td>I</td>
+<td>J</td>
+<td>K</td>
+<td>L</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>F</td>
+<td>G</td>
+<td>F</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+</tr>
+</tbody>
+</table>
+<p>如果匹配时的情况是下面这样:</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>F</td>
+<td>G</td>
+<td>H</td>
+<td>I</td>
+<td>J</td>
+<td>K</td>
+<td>L</td>
+</tr>
+<tr>
+<td>F</td>
+<td>G</td>
+<td>F</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+</tr>
+</tbody>
+</table>
+<p>已经匹配成功的字符串是FG，而在模式串中，FG还出现在位置0处，所以此时移动模式串，将位置0处的FG，和内容串中的FG对齐。</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>F</td>
+<td>G</td>
+<td>H</td>
+<td>I</td>
+<td>J</td>
+<td>K</td>
+<td>L</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>F</td>
+<td>G</td>
+<td>F</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+</tr>
+</tbody>
+</table>
+<p>也就是说，这种全匹配的情况，指的是已匹配部分字符串，可以在模式串中的其他位置，完整的找到。此时，就移动模式串，使得已匹配部分字符串，和刚才找到的位置对应。当然，如果已匹配部分，在模式串中存在多处，那就跳转至最右侧那个位置，以免一次性跳转距离太多，漏掉部分匹配结果。</p>
+<h3 id="2-部分匹配情况"><a href="#2-部分匹配情况" class="headerlink" title="2) 部分匹配情况"></a>2) 部分匹配情况</h3><p>如果匹配时的情况是下面这样:</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+<td>H</td>
+<td>I</td>
+<td>J</td>
+<td>K</td>
+<td>L</td>
+</tr>
+<tr>
+<td>F</td>
+<td>G</td>
+<td>F</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+</tr>
+</tbody>
+</table>
+<p>已经匹配成功的字符串是AEFG，但在模式串中，我们再也找不到完整的AEFG了。所以，我们退而求其次，去找已匹配部分AEFG的后缀。AEFG的后缀有EFG、FG、G，但此时我们找的规则有些变化，不是只要出现在模式串中就行，而是必须出现在模式串头部。比如后缀FG和G，都有在模式串中再次出现，FG出现在位置0，G出现在位置1。但因为只有FG出现在模式串头部，所以我们认为AEFG的好后缀是FG。</p>
+<p>而此时的跳转，则就是使得刚才找到的好后缀，对齐内容串已匹配部分中的位置。</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+<td>H</td>
+<td>I</td>
+<td>J</td>
+<td>K</td>
+<td>L</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>F</td>
+<td>G</td>
+<td>F</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+</tr>
+</tbody>
+</table>
+<p>当然了，除了这两种情况以外，我们可能找不到任何一个完整匹配，或者部分匹配的位置，那么这时我们就直接越过整个模式串的长度。</p>
+<h1 id="4-查找规则"><a href="#4-查找规则" class="headerlink" title="4. 查找规则"></a>4. 查找规则</h1><p>根据上面的介绍，我们可以对模式串进行分析，构造出他的坏字符表和好后缀表两张表。而查找的规则也很简单，就是先通过这两张表计算出各自的跳跃距离，然后取最大值进行模式串移动。</p>
+<p>举个例子，根据坏字符表计算出的移动距离是1，根据好后缀表计算出额移动距离是3，那么就取最大值3，使得模式串后移3位。</p>
+<h1 id="5-代码实现"><a href="#5-代码实现" class="headerlink" title="5. 代码实现"></a>5. 代码实现</h1><p>Boyer-Moore算法的Python封装实现，已经开源上传至github并支持PyPI安装。</p>
+<p><a href="https://github.com/BenArvin/BAAlgorithmUtils" target="_blank" rel="noopener">地址点这里</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+       
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+            <a href="/tags/算法/" rel="tag"># 算法</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/18/算法学习之KMP/" rel="next" title="算法学习之KMP">
+                <i class="fa fa-chevron-left"></i> 算法学习之KMP
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/12/27/算法学习之Horspool/" rel="prev" title="算法学习之Horspool">
+                算法学习之Horspool <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ben Arvin</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v6.6.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.6.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.6.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.6.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.6.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.6.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

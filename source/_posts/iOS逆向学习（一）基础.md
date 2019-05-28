@@ -42,7 +42,7 @@ tags: [iOS, 逆向]
 # 四、代码注入
 那么通过静态/动态的分析之后，我们虽然分析了大致的代码结构，定位了关键目标代码块。但如果我们想不仅仅是观察，更想对原代码原APP进行改动，这时就需要使用代码注入。常见的代码注入，基本都是通过hook的原理去做的。常见的hook工具有下面这几种：
 
-- Logos Tweak: 使用logos语法（不要怕，语法很简单，看一眼就会），objc、C方法都可以hook。使用方法网上一大把，不过对于logos语法，最好先看一下[iPhoneDevWiki上的介绍]{https://iphonedevwiki.net/index.php/Logos}
+- Logos Tweak: 使用logos语法（不要怕，语法很简单，看一眼就会），objc、C方法都可以hook。使用方法网上一大把，不过对于logos语法，最好先看一下[iPhoneDevWiki上的介绍](https://iphonedevwiki.net/index.php/Logos)
 - CaptainHook: 可以用来hook objc方法
 - fishhook: 可以用来hook C方法
 

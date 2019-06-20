@@ -9,8 +9,8 @@ tags: [iOS, 逆向]
 
 看完Mach-O文件跟dyld加载介绍后，使劲拍拍脑袋能想到两种砸壳思路：
 
-- 1. 直接破解FairPlay加密技术：很可惜暂时做不到，还没有公开的破解方案出来
-- 2. 从APP的加载运行入手，越过解密阶段，直接从内存中读取被dyld解密后的内容
+- 1、直接破解FairPlay加密技术：很可惜暂时做不到，还没有公开的破解方案出来
+- 2、从APP的加载运行入手，越过解密阶段，直接从内存中读取被dyld解密后的内容
 
 所以目前常见的砸壳工作，都是使用第二种思路来做的，这里我们以dumpdecrypted为例进行分析。
 
@@ -57,10 +57,10 @@ void (*func)(const struct mach_header *mh, intptr_t vmaddr_slide))
 ```
 大致的意思，就是说注册了一个监听方法，用于监听bundle或者动态加载库的加载事件，而且加载事件，对于每个bundle或者动态库仅会触发一次。到这里，我们就可以梳理出整个砸壳工具的逻辑顺序了：
 
-- 1. 伴随`constructor`函数的调用，在main函数执行前，调用`dumpexecutable`函数
-- 2. 在`dumpexecutable`函数中，注册bundle或动态库的加载事件监听，而且其响应方法是`image_added`函数
-- 3. 当bundle或者动态库被加载时，触发事件监听，调用`image_added`方法，并向其传递header结构体指针，和另外一个不知道有什么用的参数slide
-- 4. 然后在`image_added`方法内，调用`dumptofile`函数，进行真正的文件导出工作
+- 1、伴随`constructor`函数的调用，在main函数执行前，调用`dumpexecutable`函数
+- 2、在`dumpexecutable`函数中，注册bundle或动态库的加载事件监听，而且其响应方法是`image_added`函数
+- 3、当bundle或者动态库被加载时，触发事件监听，调用`image_added`方法，并向其传递header结构体指针，和另外一个不知道有什么用的参数slide
+- 4、然后在`image_added`方法内，调用`dumptofile`函数，进行真正的文件导出工作
 
 所以到这里，我们转向`dumptofile`函数，看一下其内部实现。越过前面的变量定义，首先看这一段
 

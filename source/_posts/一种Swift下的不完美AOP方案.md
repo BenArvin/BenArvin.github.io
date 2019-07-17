@@ -1,7 +1,7 @@
 ---
 title: 一种Swift下的不完美AOP方案
 date: 2019-07-17 23:00:00
-tags: [iOS, Swift, AOP]
+tags: [iOS, Swift, AOP, hook]
 ---
 
 因为Swift缺少动态性的问题，导致没办法像OC一样，通过runtime去实现AOP。虽然依旧可以通过在Swift代码中，添加`@objc`声明使之动态化的方式。但是这种做法，毕竟还是不Swift的。那么有没有办法，在不使用私有API的前提下实现AOP呢？

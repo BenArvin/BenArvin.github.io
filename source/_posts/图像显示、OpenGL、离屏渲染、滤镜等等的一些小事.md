@@ -4,6 +4,8 @@ date: 2019-08-24 22:00:00
 tags: [iOS, OpenGL, 图显]
 ---
 
+因为本文的意图，是把一系列的知识点串联起来，而不是逐个的深入分析，所以将会比较笼统。想要了解更多的细节，你可以参照文末的参考资料，或者自己搜索下各个知识点。当然，以后我也会不定期的针对某些点研究后再发文介绍。那么我们就开始吧。
+
 先从第一步，也就是显示一张图片说起。对于我们开发人员来说，在iOS代码里面，想要显示一张图片，只需要新建一个`UIImage`，然后赋值到`UIImageView`里面就行。简而言之，我们直观所得的，就像是下面这张图里的样子：
 
 ![](/images/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/img_1.png)
@@ -92,11 +94,11 @@ Alpha测试及混合 -> (*)
 ```
 
 我们用画个三角形的例子，挨个对每个阶段进行简单介绍：
-- 顶点着色器：是根据顶点数据，确定三角形的三个顶点的位置
+- 顶点着色器：`vertex Shader`，是根据顶点数据，确定三角形的三个顶点的位置
 - 图元装配：根据上一步的顶点位置，装配成基本的图元形状，比如三角形
 - 几何着色器：对上一步的图元进行变换，形成新的图元，具体细节还没研究
 - 光栅化：把图元映射为最终显示在屏幕上的像素，同时也会裁掉屏幕显示范围之外的内容
-- 片段着色器：计算每个像素的颜色，计算规则受了很多因素的影响，例如光照之类的3D场景数据
+- 片段着色器：`Fragment Shader`，计算每个像素的颜色，计算规则受了很多因素的影响，例如光照之类的3D场景数据
 - Alpha测试及混合：因为每个屏幕像素点上，可能堆叠了多个颜色数据，所以就要根据深度、alpha值进行计算
 
 而反映到具体的iOS代码上，还要多出新建图层等等一系列操作，总的来说分成下面这几步：
@@ -200,14 +202,14 @@ gl_FragColor = vec4((1.0 - textureColor.rgb), textureColor.w);
 
 比如减少透明图层的数量，就是降低了Alpha测试阶段的计算量。降低图片质量，就是降低了纹理数据的生成、映射工作的计算量。对齐像素位，就对应着减少光栅化阶段，边缘模糊带来的计算量。当然这么简单对应不是十分的准确，但大致是这么个思路。
 
-### OpenGL样例工程
-`OpenGL`学习过程中的简单源码实现，可以点进这个github工程参考一下。
+### OpenGL学习样例工程
+`OpenGL`学习过程中的简单样例源码实现，可以点进这个github工程参考一下。
 
 [https://github.com/BenArvin/BAOpenGLLearning](https://github.com/BenArvin/BAOpenGLLearning)
 
 目前工程中包含了三角形、四边形、圆形、纹理渲染、简单滤镜之类的代码，3D效果之类的，后面不定期更新上去。
 
-### 参考资料
+### 部分参考资料
 [LearnOpenGL CN](https://learnopengl-cn.github.io)
 [Getting Pixels onto the Screen](https://www.objc.io/issues/3-views/moving-pixels-onto-the-screen/#asynchronous-drawing)
 [OpenGL Wiki](https://www.khronos.org/opengl/wiki/Main_Page)

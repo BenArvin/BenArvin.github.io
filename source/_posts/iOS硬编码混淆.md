@@ -1,7 +1,7 @@
 ---
 title: iOS硬编码混淆
 date: 2018-11-26 19:11:32
-tags: [iOS, 混淆, 加固, Clang, Python, 算法]
+tags: [iOS, 混淆, 加固, Clang, Python, 算法, 安全]
 ---
 在做iOS马甲包，或者加固的时候，我们需要进行代码混淆。目前比较成熟方便的解决方案，大多是采用[念茜大神博客](https://blog.csdn.net/yiyaaixuexi/article/details/29201699)里介绍的`#define`方式来做。
 

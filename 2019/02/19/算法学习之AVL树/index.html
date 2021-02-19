@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.6.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.6.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.6.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '6.6.0',
+    sidebar: {"position":"left","display":"remove","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="AVL树(Adelson-Velsky and Landis Tree)，是一种自平衡二叉查找树。网上的介绍比较多，这里仅作为学习记录。 老规矩，代码实现直接跳转至最后一章。 1. 二叉查找树下面这个树就是二叉查找树，可以看到。每个节点的左子节点，要小于自己。右子节点，要大于自己。  所以总的来说，二叉查找树，是一种有序的二叉树。同时正因为这种有序的特性，使得进行查找时效率，类似于二分法查找，会远">
+<meta name="keywords" content="算法,Python">
+<meta property="og:type" content="article">
+<meta property="og:title" content="算法学习之AVL树">
+<meta property="og:url" content="https://benarvin.github.io/2019/02/19/算法学习之AVL树/index.html">
+<meta property="og:site_name" content="BenArvin&#39;s blog">
+<meta property="og:description" content="AVL树(Adelson-Velsky and Landis Tree)，是一种自平衡二叉查找树。网上的介绍比较多，这里仅作为学习记录。 老规矩，代码实现直接跳转至最后一章。 1. 二叉查找树下面这个树就是二叉查找树，可以看到。每个节点的左子节点，要小于自己。右子节点，要大于自己。  所以总的来说，二叉查找树，是一种有序的二叉树。同时正因为这种有序的特性，使得进行查找时效率，类似于二分法查找，会远">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之AVL树/img1.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之AVL树/img2.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之AVL树/img3.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之AVL树/img4.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之AVL树/img5.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之AVL树/img6.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之AVL树/img7.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之AVL树/img8.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之AVL树/img11.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之AVL树/img12.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之AVL树/img13.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之AVL树/img9.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之AVL树/img10.png">
+<meta property="og:updated_time" content="2021-02-19T08:49:21.054Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="算法学习之AVL树">
+<meta name="twitter:description" content="AVL树(Adelson-Velsky and Landis Tree)，是一种自平衡二叉查找树。网上的介绍比较多，这里仅作为学习记录。 老规矩，代码实现直接跳转至最后一章。 1. 二叉查找树下面这个树就是二叉查找树，可以看到。每个节点的左子节点，要小于自己。右子节点，要大于自己。  所以总的来说，二叉查找树，是一种有序的二叉树。同时正因为这种有序的特性，使得进行查找时效率，类似于二分法查找，会远">
+<meta name="twitter:image" content="https://benarvin.github.io/images/算法学习之AVL树/img1.png">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="BenArvin's blog" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="https://benarvin.github.io/2019/02/19/算法学习之AVL树/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>算法学习之AVL树 | BenArvin's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">BenArvin's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">No code, no bug. No deploy, no error.</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://benarvin.github.io/2019/02/19/算法学习之AVL树/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ben Arvin">
+      <meta itemprop="description" content="No code, no bug. No deploy, no error.">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="BenArvin's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">算法学习之AVL树
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-02-19 22:00:00" itemprop="dateCreated datePublished" datetime="2019-02-19T22:00:00+08:00">2019-02-19</time>
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>AVL树(Adelson-Velsky and Landis Tree)，是一种自平衡二叉查找树。网上的介绍比较多，这里仅作为学习记录。</p>
+<p>老规矩，代码实现直接跳转至最后一章。</p>
+<h1 id="1-二叉查找树"><a href="#1-二叉查找树" class="headerlink" title="1. 二叉查找树"></a>1. 二叉查找树</h1><p>下面这个树就是二叉查找树，可以看到。每个节点的左子节点，要小于自己。右子节点，要大于自己。</p>
+<p><img src="/images/算法学习之AVL树/img1.png" alt></p>
+<p>所以总的来说，二叉查找树，是一种有序的二叉树。同时正因为这种有序的特性，使得进行查找时效率，类似于二分法查找，会远高于依次遍历。</p>
+<p>但二叉查找树的高效率是存在缺陷的。举个例子，我们继续向刚才的树里依次插入一些数据：<code>9</code>、<code>10</code>、 <code>11</code>，那树就变成了这个样子：</p>
+<p><img src="/images/算法学习之AVL树/img2.png" alt></p>
+<p>此时如果我们想要查找<code>11</code>的话，因为右侧分支处于线性的结构，所以查找效率等同于遍历。甚至于更为极端的例子，使用<code>1</code>、<code>2</code>、<code>3</code>、<code>4</code>、<code>5</code>、<code>6</code>这样的数据，来构造二叉查找树的话，得到的整棵树都是线性的结构：</p>
+<p><img src="/images/算法学习之AVL树/img3.png" alt></p>
+<h1 id="2-AVL树"><a href="#2-AVL树" class="headerlink" title="2. AVL树"></a>2. AVL树</h1><p>AVL树和二叉查找树的区别，就在于AVL树具有自平衡的特性。先不管什么叫自平衡，而是先关注其作用。</p>
+<p>自平衡特性的作用，就在于阻止线性结构的产生，从而避免查找效率的遍历化倾向。</p>
+<p>自平衡的定义有很多种，对于红黑树、AVL树、Treap树而言都各不相同，用以满足各自的算法逻辑。在AVL树中，平衡的定义，指的是每个节点的左子树深度，和右子树深度的差值，不大于1。举几个例子：</p>
+<p><img src="/images/算法学习之AVL树/img4.png" alt></p>
+<p>上面的五个树中，前四个都是平衡的。最后一个树中，节点<code>4</code>的左子树深度是0，右子树深度是2，相差大于1，所以是不平衡的。同时这个树中的节点<code>3</code>，左右子树深度差也是大于1的。</p>
+<p>而自平衡中的“自”，指的就是对树进行插入、删除节点操作之后，还能自动调整保持平衡。</p>
+<h2 id="2-1-插入操作"><a href="#2-1-插入操作" class="headerlink" title="2.1 插入操作"></a>2.1 插入操作</h2><p>AVL树的插入操作分为两步，第一步跟二叉查找树一样，把节点按大小顺序插入到树中即可。第二步则是检查平衡性，如果不平衡的话，就进行调整达到平衡。所以在这里，我们只关注如何进行平衡性的调整。</p>
+<p>用下面这个树作为例子：</p>
+<p><img src="/images/算法学习之AVL树/img5.png" alt></p>
+<p>然后向其中插入数据，树结构变成下面这四种不平衡的状态：</p>
+<p><img src="/images/算法学习之AVL树/img6.png" alt></p>
+<p>对于<code>a</code>、<code>b</code>两种情况，只要把导致不平衡的最小子树集合，进行适当旋转即可重新达到平衡状态：</p>
+<p><img src="/images/算法学习之AVL树/img7.png" alt></p>
+<p>而<code>c</code>、<code>d</code>这两种不平衡最小子树方向不一致的情况，就先把方向旋转成一致的，再按照<code>a</code>、<code>b</code>的情况处理就好了：</p>
+<p><img src="/images/算法学习之AVL树/img8.png" alt></p>
+<p>当然，除去上面几种简单的情况外。在比较复杂的情况下，被旋转节点左右子树，还包含有子树时，就得在旋转之前，多一个步骤。用下面的树举例子：</p>
+<p><img src="/images/算法学习之AVL树/img11.png" alt></p>
+<p>左边是原本已处于平衡态的树结构，右边是向其中插入节点<code>6</code>后，处于非平衡态的树结构。</p>
+<p>此时，节点<code>2</code>的左右子树深度差大于1，需要进行旋转操作恢复平衡。但因为其右子节点<code>4</code>，还有着自己的子树结构，所以进行下面的步骤恢复平衡：</p>
+<p><img src="/images/算法学习之AVL树/img12.png" alt></p>
+<ul>
+<li>1）step1：找到节点<code>2</code>右子节点的左子节点，并将其设为节点<code>2</code>的右子节点。</li>
+<li>2）step2：进行旋转操作恢复平衡性</li>
+</ul>
+<p>上面的例子，是右子树深度大于左子树深度，且右子节点还包含有子树时的情况。</p>
+<p>如果反过来，是左子树深度大于右子树深度，且左子节点还包含有子树时的情况。那就相应的反过来，先构建和左子节点的右子节点的关联，然后再进行旋转即可：</p>
+<p><img src="/images/算法学习之AVL树/img13.png" alt></p>
+<h2 id="2-2-删除操作"><a href="#2-2-删除操作" class="headerlink" title="2.2 删除操作"></a>2.2 删除操作</h2><p>AVL树的删除操作比较简单。以下面的树作为例子：</p>
+<p><img src="/images/算法学习之AVL树/img9.png" alt></p>
+<p>删除节点<code>6</code>或者节点<code>7</code>这种简单关系节点的话，直接删除就可以了。稍微麻烦的是，删除节点<code>10</code>这种，拥有左右子树的复杂关系节点。此时的删除操作分为两个步骤：</p>
+<ul>
+<li>1）找出深度更大的一侧子树</li>
+<li>2）用该侧子树中的最大（左子树）/最小（右子树）节点内容，替换被删除节点的内容</li>
+<li>3）删除该侧子树中的最大（左子树）/最小（右子树）节点</li>
+<li>4）检查平衡性</li>
+</ul>
+<p>以删除节点<code>10</code>举例子：</p>
+<p><img src="/images/算法学习之AVL树/img10.png" alt></p>
+<ul>
+<li>1）step1：节点<code>10</code>左子树深度为3，右子树深度为2，因此对深度更大的左子树进行操作。左子树中最大节点为节点<code>9</code>，使用节点<code>9</code>的内容，替换节点<code>10</code>的内容</li>
+<li>2）step2：删除节点<code>9</code></li>
+<li>3）step3：检查平衡性，发现左侧子树不平衡，通过旋转操作调整至平衡态</li>
+</ul>
+<p>当然，删除操作也可以使用其他方式去做，不过这种使用最大/最小节点内容，替换被删除节点内容的方式，可以使得树结构的变化范围尽可能地小，所以相较而言效率也更好些。</p>
+<h1 id="3-代码实现"><a href="#3-代码实现" class="headerlink" title="3. 代码实现"></a>3. 代码实现</h1><p>AVL树的简单Python封装实现，已经开源上传至github并支持PyPI安装。但仅可作为简单场景使用及参考，实际应用需根据使用场景自行定制。</p>
+<p><a href="https://github.com/BenArvin/BAAlgorithmUtils" target="_blank" rel="noopener">地址点这里</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+       
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/算法/" rel="tag"># 算法</a>
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/28/算法学习之SBOM/" rel="next" title="算法学习之SBOM">
+                <i class="fa fa-chevron-left"></i> 算法学习之SBOM
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/27/iOS逆向学习（一）基础/" rel="prev" title="iOS逆向学习（一）基础">
+                iOS逆向学习（一）基础 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ben Arvin</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v6.6.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.6.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.6.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.6.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.6.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.6.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

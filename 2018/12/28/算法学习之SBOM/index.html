@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.6.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.6.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.6.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '6.6.0',
+    sidebar: {"position":"left","display":"remove","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="SBOM算法的全称是Set Backward Oracle Matching，是一种基于子串的，使用了Factor Oracle自动机的，字符串多模匹配算法。因为这种算法的资料比较少，所以这里详细的介绍一下。 老规矩，代码实现直接跳转至最后一章。 1. 基于子串举个简单的例子，    0 1 2 3 4 5 6 7 8 9 10 11     A B C D F F G H I J K L   F">
+<meta name="keywords" content="算法,Python">
+<meta property="og:type" content="article">
+<meta property="og:title" content="算法学习之SBOM">
+<meta property="og:url" content="https://benarvin.github.io/2018/12/28/算法学习之SBOM/index.html">
+<meta property="og:site_name" content="BenArvin&#39;s blog">
+<meta property="og:description" content="SBOM算法的全称是Set Backward Oracle Matching，是一种基于子串的，使用了Factor Oracle自动机的，字符串多模匹配算法。因为这种算法的资料比较少，所以这里详细的介绍一下。 老规矩，代码实现直接跳转至最后一章。 1. 基于子串举个简单的例子，    0 1 2 3 4 5 6 7 8 9 10 11     A B C D F F G H I J K L   F">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之SBOM/img1.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之SBOM/img2.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之SBOM/img3.png">
+<meta property="og:image" content="https://benarvin.github.io/images/算法学习之SBOM/img4.png">
+<meta property="og:updated_time" content="2021-02-19T08:49:21.054Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="算法学习之SBOM">
+<meta name="twitter:description" content="SBOM算法的全称是Set Backward Oracle Matching，是一种基于子串的，使用了Factor Oracle自动机的，字符串多模匹配算法。因为这种算法的资料比较少，所以这里详细的介绍一下。 老规矩，代码实现直接跳转至最后一章。 1. 基于子串举个简单的例子，    0 1 2 3 4 5 6 7 8 9 10 11     A B C D F F G H I J K L   F">
+<meta name="twitter:image" content="https://benarvin.github.io/images/算法学习之SBOM/img1.png">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="BenArvin's blog" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="https://benarvin.github.io/2018/12/28/算法学习之SBOM/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>算法学习之SBOM | BenArvin's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">BenArvin's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">No code, no bug. No deploy, no error.</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://benarvin.github.io/2018/12/28/算法学习之SBOM/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ben Arvin">
+      <meta itemprop="description" content="No code, no bug. No deploy, no error.">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="BenArvin's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">算法学习之SBOM
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-12-28 22:00:00" itemprop="dateCreated datePublished" datetime="2018-12-28T22:00:00+08:00">2018-12-28</time>
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>SBOM算法的全称是Set Backward Oracle Matching，是一种基于子串的，使用了Factor Oracle自动机的，字符串多模匹配算法。因为这种算法的资料比较少，所以这里详细的介绍一下。</p>
+<p>老规矩，代码实现直接跳转至最后一章。</p>
+<h1 id="1-基于子串"><a href="#1-基于子串" class="headerlink" title="1. 基于子串"></a>1. 基于子串</h1><p>举个简单的例子，</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>B</td>
+<td>C</td>
+<td>D</td>
+<td>F</td>
+<td>F</td>
+<td>G</td>
+<td>H</td>
+<td>I</td>
+<td>J</td>
+<td>K</td>
+<td>L</td>
+</tr>
+<tr>
+<td>F</td>
+<td>G</td>
+<td>F</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+</tr>
+</tbody>
+</table>
+<p>当前已经匹配了的内容串部分是FG，称之为u。不匹配的字符是F，称之为σ。我们认为既然在σ处匹配失败了，所以σu就不再是模式串的子串了。更进一步的，模式串在内容串中任意匹配区域，都不会出现σu。所以，我们就可以移动模式串越过σ的位置，像下面这样。</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>B</td>
+<td>C</td>
+<td>D</td>
+<td>F</td>
+<td>F</td>
+<td>G</td>
+<td>H</td>
+<td>I</td>
+<td>J</td>
+<td>K</td>
+<td>L</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>F</td>
+<td>G</td>
+<td>F</td>
+<td>A</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+</tr>
+</tbody>
+</table>
+<p>但可以看出，这种简陋的规则是存在漏洞的，可能会遗漏部分匹配结果。所以，我们需要做一些改进。</p>
+<h1 id="2-Factor-Oracle自动机"><a href="#2-Factor-Oracle自动机" class="headerlink" title="2. Factor Oracle自动机"></a>2. Factor Oracle自动机</h1><p>因为上一节中，我们发现那种基于原理的，简陋的匹配规则是存在漏洞的。所以为了解决，我们就可以使用Factor Oracle自动机。跟<a href="https://benarvintec.com/2018/11/26/算法学习之Aho-Corasick/" target="_blank" rel="noopener">Aho-Corasick算法</a>使用的自动机类似，Factor Oracle自动机也是基于Tire Tree的。用模式串<code>announce</code>来举例子，先反序构造其Tire Tree状态转移图:</p>
+<p><img src="/images/算法学习之SBOM/img1.png" alt></p>
+<p>然后先不介绍Factor Oracle自动机的构造方法，看一下最终的状态转移图:</p>
+<p><img src="/images/算法学习之SBOM/img2.png" alt></p>
+<p>我们发现相较于最初的Tire Tree，多了一些节点间的跳转路径。那这些路径的构造，就是构造Factor Oracle自动机的核心。其构造规则大致是这样的:</p>
+<h2 id="2-1-前置定义"><a href="#2-1-前置定义" class="headerlink" title="2.1 前置定义"></a>2.1 前置定义</h2><ul>
+<li>1) 如果状态节点m，可以通过输入值α，转移到状态节点n，那P(n)=α</li>
+<li>2) 对于每个状态n， 将它与另一个状态m(m&lt;n)关联，称m为n的供给状态，并用S(n)=m表示，其中的S称为供给函数。</li>
+<li>3) S(0)=𝚹</li>
+</ul>
+<p>需要注意的是，𝚹无实际意义，仅作为标记。同时，供给函数S并不反映在状态转移图上。</p>
+<h2 id="2-2-构造步骤"><a href="#2-2-构造步骤" class="headerlink" title="2.2 构造步骤"></a>2.2 构造步骤</h2><p>从状态节点1开始，逐个检查直至最后一个状态节点。假设已经检查过状态节点i-1，并且开始检查状态节点i，这时就沿着状态节点i-1的供给函数开始回溯。具体的做法是，先把变量k初始化为S(i-1)，然后执行下面的步骤:</p>
+<ul>
+<li>step1: 如果k=𝚹，那么S(i)=0，停止执行</li>
+<li>step2: 如果k!=𝚹，并且状态k不存在P(i)转移，那么构造从状态k到状态i的转移路径，转移路径的标号为P(i)。然后k=S(k)，并跳转至step1</li>
+<li>step2: 如果k!=𝚹，并且状态k存在P(i)转移，目的状态为j，那么S(i)=j，停止执行</li>
+</ul>
+<h2 id="2-3-案例推演"><a href="#2-3-案例推演" class="headerlink" title="2.3 案例推演"></a>2.3 案例推演</h2><p>还是用模式串<code>announce</code>举例子，其每一步的推演大致是这样的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">i=1, P(i)=e, k=S(0)=𝚹</span><br><span class="line">step1: S(1)=0</span><br><span class="line"></span><br><span class="line">i=2, P(i)=c, k=S(1)=0</span><br><span class="line">step2: build 0-c-&gt;2, k=S(0)=𝚹</span><br><span class="line">step1: S(2)=0</span><br><span class="line"></span><br><span class="line">i=3, P(i)=n, k=S(2)=0</span><br><span class="line">step2: build 0-n-&gt;3, k=S(0)=𝚹</span><br><span class="line">step1: S(3)=0</span><br><span class="line"></span><br><span class="line">i=4, P(i)=u, k=S(3)=0</span><br><span class="line">step2: build 0-u-&gt;4, k=S(0)=𝚹</span><br><span class="line">step1: S(4)=0</span><br><span class="line"></span><br><span class="line">i=5, P(i)=o, k=S(4)=0</span><br><span class="line">step2: build 0-o-&gt;5, k=S(0)=𝚹</span><br><span class="line">step1: S(5)=0</span><br><span class="line"></span><br><span class="line">i=6, P(i)=n, k=S(5)=0</span><br><span class="line">step3: j=k-P(i)-&gt;=3, S(6)=3</span><br><span class="line"></span><br><span class="line">i=7, P(i)=n, k=S(6)=3</span><br><span class="line">step2: build 3-n-&gt;7, k=S(3)=0</span><br><span class="line">step3: j=k-P(i)-&gt;=3, S(7)=3</span><br><span class="line"></span><br><span class="line">i=8, P(i)=a, k=S(7)=3</span><br><span class="line">step2: build 3-a-&gt;8, k=S(3)=0</span><br><span class="line">step2: build 0-a-&gt;8, k=S(0)=𝚹</span><br><span class="line">step1: S(8)=0</span><br></pre></td></tr></table></figure>
+<h1 id="3-SBOM算法"><a href="#3-SBOM算法" class="headerlink" title="3. SBOM算法"></a>3. SBOM算法</h1><p>因为需要使用Factor Oracle自动机，所以SBOM算法的构造、使用过程，主要分成下面三步。</p>
+<h2 id="3-1-构造Factor-Oracle自动机"><a href="#3-1-构造Factor-Oracle自动机" class="headerlink" title="3.1 构造Factor Oracle自动机"></a>3.1 构造Factor Oracle自动机</h2><p>SBOM算法中，对于Factor Oracle自动机的使用有些特殊。并非是使用整个模式串来构造，而是根据最短的那个模式串的长度，剪裁得到每个模式串的前缀，用来构造自动机。以模式串<code>announce</code>、<code>annual</code>、<code>annually</code>举例子，最短的模式串是<code>annual</code>，长度为6。所以截取每个模式串得到的前缀就是<code>announ</code>、<code>annual</code>。相应的，先构造其Tire Tree，得到的状态转化图是这样:</p>
+<p><img src="/images/算法学习之SBOM/img3.png" alt></p>
+<p>然后再进一步，根据上一节中介绍的构造逻辑，得到最终的Factor Oracle自动机，其状态转化图是这样:</p>
+<p><img src="/images/算法学习之SBOM/img4.png" alt></p>
+<h2 id="3-2-先期匹配"><a href="#3-2-先期匹配" class="headerlink" title="3.2 先期匹配"></a>3.2 先期匹配</h2><p>Factor Oracle自动机构造好后，我们就可以进行匹配操作了。其匹配跳转规则，和基于子串的匹配逻辑基本一致。用内容串<code>CPM_annual_conference_announce</code>举例子:</p>
+<p>首先将长度为6(最短模式串的长度)的搜索窗口，最左侧和内容串的最左侧对齐。</p>
+<table>
+<thead>
+<tr>
+<th>C</th>
+<th>P</th>
+<th>M</th>
+<th>_</th>
+<th>a</th>
+<th>n</th>
+<th>n</th>
+<th>u</th>
+<th>a</th>
+<th>l</th>
+<th>_</th>
+<th>c</th>
+<th>o</th>
+<th>n</th>
+<th>f</th>
+<th>e</th>
+<th>r</th>
+<th>e</th>
+<th>n</th>
+<th>c</th>
+<th>e</th>
+<th>_</th>
+<th>a</th>
+<th>n</th>
+<th>n</th>
+<th>o</th>
+<th>u</th>
+<th>n</th>
+<th>c</th>
+<th>e</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>然后从窗口的最右侧开始，依次取内容串中的字符输入到自动机中。直至字母<code>_</code>，自动机状态转移失败。于是我们移动窗口，越过字母<code>_</code>的位置。</p>
+<table>
+<thead>
+<tr>
+<th>C</th>
+<th>P</th>
+<th>M</th>
+<th>_</th>
+<th>a</th>
+<th>n</th>
+<th>n</th>
+<th>u</th>
+<th>a</th>
+<th>l</th>
+<th>_</th>
+<th>c</th>
+<th>o</th>
+<th>n</th>
+<th>f</th>
+<th>e</th>
+<th>r</th>
+<th>e</th>
+<th>n</th>
+<th>c</th>
+<th>e</th>
+<th>_</th>
+<th>a</th>
+<th>n</th>
+<th>n</th>
+<th>o</th>
+<th>u</th>
+<th>n</th>
+<th>c</th>
+<th>e</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>再次从右侧开始输入字符，直至最左侧的字符<code>a</code>输入结束，自动机状态跳转正常，那么表示在此处找到了其中一个可能的匹配结果，并标记下此处位置为ω(0)。标记结束后，将窗口右移一位。</p>
+<table>
+<thead>
+<tr>
+<th>C</th>
+<th>P</th>
+<th>M</th>
+<th>_</th>
+<th>a</th>
+<th>n</th>
+<th>n</th>
+<th>u</th>
+<th>a</th>
+<th>l</th>
+<th>_</th>
+<th>c</th>
+<th>o</th>
+<th>n</th>
+<th>f</th>
+<th>e</th>
+<th>r</th>
+<th>e</th>
+<th>n</th>
+<th>c</th>
+<th>e</th>
+<th>_</th>
+<th>a</th>
+<th>n</th>
+<th>n</th>
+<th>o</th>
+<th>u</th>
+<th>n</th>
+<th>c</th>
+<th>e</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>再次从右侧开始输入字符，直至字母<code>_</code>，自动机状态转移失败。于是我们移动窗口，越过字母<code>_</code>的位置。</p>
+<table>
+<thead>
+<tr>
+<th>C</th>
+<th>P</th>
+<th>M</th>
+<th>_</th>
+<th>a</th>
+<th>n</th>
+<th>n</th>
+<th>u</th>
+<th>a</th>
+<th>l</th>
+<th>_</th>
+<th>c</th>
+<th>o</th>
+<th>n</th>
+<th>f</th>
+<th>e</th>
+<th>r</th>
+<th>e</th>
+<th>n</th>
+<th>c</th>
+<th>e</th>
+<th>_</th>
+<th>a</th>
+<th>n</th>
+<th>n</th>
+<th>o</th>
+<th>u</th>
+<th>n</th>
+<th>c</th>
+<th>e</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>再次从右侧开始输入字符，直至字母<code>r</code>，自动机状态转移失败。于是我们移动窗口，越过字母<code>r</code>的位置。</p>
+<table>
+<thead>
+<tr>
+<th>C</th>
+<th>P</th>
+<th>M</th>
+<th>_</th>
+<th>a</th>
+<th>n</th>
+<th>n</th>
+<th>u</th>
+<th>a</th>
+<th>l</th>
+<th>_</th>
+<th>c</th>
+<th>o</th>
+<th>n</th>
+<th>f</th>
+<th>e</th>
+<th>r</th>
+<th>e</th>
+<th>n</th>
+<th>c</th>
+<th>e</th>
+<th>_</th>
+<th>a</th>
+<th>n</th>
+<th>n</th>
+<th>o</th>
+<th>u</th>
+<th>n</th>
+<th>c</th>
+<th>e</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>再次从右侧开始输入字符，直至字母<code>_</code>，自动机状态转移失败。于是我们移动窗口，越过字母<code>_</code>的位置。</p>
+<table>
+<thead>
+<tr>
+<th>C</th>
+<th>P</th>
+<th>M</th>
+<th>_</th>
+<th>a</th>
+<th>n</th>
+<th>n</th>
+<th>u</th>
+<th>a</th>
+<th>l</th>
+<th>_</th>
+<th>c</th>
+<th>o</th>
+<th>n</th>
+<th>f</th>
+<th>e</th>
+<th>r</th>
+<th>e</th>
+<th>n</th>
+<th>c</th>
+<th>e</th>
+<th>_</th>
+<th>a</th>
+<th>n</th>
+<th>n</th>
+<th>o</th>
+<th>u</th>
+<th>n</th>
+<th>c</th>
+<th>e</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>再次从右侧开始输入字符，直至最左侧的字符<code>a</code>输入结束，自动机状态跳转正常，那么表示在此处找到了其中一个可能的匹配结果，并标记下此处位置为ω(1)。标记结束后，将窗口右移一位。</p>
+<table>
+<thead>
+<tr>
+<th>C</th>
+<th>P</th>
+<th>M</th>
+<th>_</th>
+<th>a</th>
+<th>n</th>
+<th>n</th>
+<th>u</th>
+<th>a</th>
+<th>l</th>
+<th>_</th>
+<th>c</th>
+<th>o</th>
+<th>n</th>
+<th>f</th>
+<th>e</th>
+<th>r</th>
+<th>e</th>
+<th>n</th>
+<th>c</th>
+<th>e</th>
+<th>_</th>
+<th>a</th>
+<th>n</th>
+<th>n</th>
+<th>o</th>
+<th>u</th>
+<th>n</th>
+<th>c</th>
+<th>e</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+<td>*</td>
+</tr>
+</tbody>
+</table>
+<p>再次从右侧开始输入字符，直至字母<code>c</code>，自动机状态转移失败。于是我们移动窗口，越过字母<code>c</code>的位置。但此时的移动，将使得搜索窗口超出内容串长度，所以认为搜索结束。</p>
+<h2 id="3-3-结果验证"><a href="#3-3-结果验证" class="headerlink" title="3.3 结果验证"></a>3.3 结果验证</h2><p>通过先期匹配，我们找到了两个可能的匹配结果ω(0)、ω(1)。但因为先期匹配时使用的Factor Oracle自动机，是基于模式串前缀构造的，所以我们还需要在刚才找到的结果位置，继续向后匹配，以验证是否能够匹配完整的模式串。比如从ω(0)位置向后延伸，就无法完整匹配任意一个模式串。而从ω(1)位置向后延伸，可以完整匹配模式串<code>announce</code>，所以我们得出，ω(1)即为最终的匹配结果。</p>
+<p>这一部分的逻辑，由于可能出现多个模式串共用同一前缀的情况，所以为了提升效率，可以使用Tire Tree进行结果的验证。</p>
+<h1 id="4-分析对比"><a href="#4-分析对比" class="headerlink" title="4. 分析对比"></a>4. 分析对比</h1><p>上一节中构造Factor Oracle自动机时，是使用剪裁后的前缀构造的。那么为什么要这么做，其原因在于，如果使用全长模式串构造的话，就无法兼容拥有相同前缀且不同长度的模式串。</p>
+<p>同时，因为没有使用全长模式串构造自动机。所以当模式串规模较大时，自动机的构造、使用开销，以及自动机的复杂度都是低于Aho-Corasick算法的，相应的，也就是效率更高。</p>
+<p>但是能不能说SBOM算法总是最优的呢？不能，因为当模式串规模较小的时候，自动机复杂程度较低带来的优势被弱化。反而Aho-Corasick算法，因为在匹配过程中只会对内容串读取一遍，所以其效率又反过来高于SBOM算法。</p>
+<h1 id="5-代码实现"><a href="#5-代码实现" class="headerlink" title="5. 代码实现"></a>5. 代码实现</h1><p>SBOM算法的Python封装实现，已经开源上传至github并支持PyPI安装。</p>
+<p><a href="https://github.com/BenArvin/BAAlgorithmUtils" target="_blank" rel="noopener">地址点这里</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+       
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/算法/" rel="tag"># 算法</a>
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/27/算法学习之Horspool/" rel="next" title="算法学习之Horspool">
+                <i class="fa fa-chevron-left"></i> 算法学习之Horspool
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/19/算法学习之AVL树/" rel="prev" title="算法学习之AVL树">
+                算法学习之AVL树 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ben Arvin</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v6.6.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.6.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.6.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.6.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.6.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.6.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.6.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.6.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.6.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '6.6.0',
+    sidebar: {"position":"left","display":"remove","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="地球人都知道，iOS不是安全的，iOS APP更不是安全的。那如果想要提升APP的安全性，就得在网络、数据存储等方面进行建设。而对于iOS APP来说，最常见的安全能力，就是反逆向的能力。 我们先看下逆向的大致步骤，我们之前也在这篇帖子（iOS逆向学习（一）基础）里聊过，基本能分成这么几步： 1). 越狱2). 砸壳3). 静态分析4). 动态调试5). 重签多开 所以下面我们就按照这个顺序，简单">
+<meta name="keywords" content="iOS,逆向,加固,安全">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS反逆向方案建设思路">
+<meta property="og:url" content="https://benarvin.github.io/2019/09/20/iOS反逆向方案建设思路/index.html">
+<meta property="og:site_name" content="BenArvin&#39;s blog">
+<meta property="og:description" content="地球人都知道，iOS不是安全的，iOS APP更不是安全的。那如果想要提升APP的安全性，就得在网络、数据存储等方面进行建设。而对于iOS APP来说，最常见的安全能力，就是反逆向的能力。 我们先看下逆向的大致步骤，我们之前也在这篇帖子（iOS逆向学习（一）基础）里聊过，基本能分成这么几步： 1). 越狱2). 砸壳3). 静态分析4). 动态调试5). 重签多开 所以下面我们就按照这个顺序，简单">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2021-02-19T08:49:21.054Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="iOS反逆向方案建设思路">
+<meta name="twitter:description" content="地球人都知道，iOS不是安全的，iOS APP更不是安全的。那如果想要提升APP的安全性，就得在网络、数据存储等方面进行建设。而对于iOS APP来说，最常见的安全能力，就是反逆向的能力。 我们先看下逆向的大致步骤，我们之前也在这篇帖子（iOS逆向学习（一）基础）里聊过，基本能分成这么几步： 1). 越狱2). 砸壳3). 静态分析4). 动态调试5). 重签多开 所以下面我们就按照这个顺序，简单">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="BenArvin's blog" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="https://benarvin.github.io/2019/09/20/iOS反逆向方案建设思路/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>iOS反逆向方案建设思路 | BenArvin's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">BenArvin's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">No code, no bug. No deploy, no error.</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://benarvin.github.io/2019/09/20/iOS反逆向方案建设思路/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ben Arvin">
+      <meta itemprop="description" content="No code, no bug. No deploy, no error.">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="BenArvin's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">iOS反逆向方案建设思路
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-09-20 23:00:00" itemprop="dateCreated datePublished" datetime="2019-09-20T23:00:00+08:00">2019-09-20</time>
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>地球人都知道，iOS不是安全的，iOS APP更不是安全的。那如果想要提升APP的安全性，就得在网络、数据存储等方面进行建设。而对于iOS APP来说，最常见的安全能力，就是反逆向的能力。</p>
+<p>我们先看下逆向的大致步骤，我们之前也在这篇帖子（<a href="https://benarvintec.com/2019/05/27/iOS逆向学习（一）基础/" target="_blank" rel="noopener">iOS逆向学习（一）基础</a>）里聊过，基本能分成这么几步：</p>
+<p>1). 越狱<br>2). 砸壳<br>3). 静态分析<br>4). 动态调试<br>5). 重签多开</p>
+<p>所以下面我们就按照这个顺序，简单分析每一步常见的技术方案，然后总结下有什么有用的信息，可以用来反逆向能力建设。</p>
+<h2 id="1、越狱"><a href="#1、越狱" class="headerlink" title="1、越狱"></a>1、越狱</h2><p>目前来看，越狱是一切逆向操作的首要前提。毕竟只有在越狱环境下，才能砸壳拿到ipa包。同时在越狱环境下，还可以直接进行有限的动态调试。</p>
+<p>对于怎么防止iPhone被越狱，这是Apple的工作，就算我们想做也做不到。但是，我们可以尽自己所能的，避免自己的APP在越狱环境下运行。那就需要我们第一，能检测到当前的环境是不是越狱环境。第二，阻止APP启动，或者退出运行中的APP。</p>
+<p>怎么检测越狱环境呢？我们得从越狱的目的上来找答案。越狱的目的显而易见，就是获得iOS系统的最高权限。我们先不管怎么去达成这个目的，只要获得了系统的最高权限，我们的APP就能调用一些本来受限的方法，比如<code>getenv</code>。同时越狱工具，也会在文件系统中，遗留一些特有的文件，比如<code>MobileSubstrate之类</code>。总之检测当前是否为越狱环境的方法千千万，就算有些方法会被攻击者使用<code>xCon</code>之类的工具绕过，我们还是能找出更多的方法。</p>
+<p>那么检测到了越狱环境以后，我们理所当然的，就要阻止APP的运行，或者停用部分功能。停用部分功能的话，直接在代码里埋开关就可以了。而阻止APP的运行，要么不让APP启动，要么就退出APP。对于阻止APP启动来说，因为启动过程是由系统控制的，所以实现起来有难度，但是我们可以轻而易举的做到退出APP。我们可以构造crah，或者直接调用<code>exit</code>，甚至于间接的执行系统调用，来退出我们的APP。但是，退出APP的方法，都是有局限容易被攻破的，这块后面我们再详细聊。</p>
+<h2 id="2、砸壳"><a href="#2、砸壳" class="headerlink" title="2、砸壳"></a>2、砸壳</h2><p>砸壳这块我们能做的其实不多，因为砸壳工具的原理，是和我们APP自身逻辑无关的。所以我们只好在上一步预防，也就是阻止我们的APP在越狱环境运行。</p>
+<p>更多关于砸壳原理的介绍，可以参照之前的帖子：</p>
+<ul>
+<li><a href="https://benarvintec.com/2019/06/20/iOS逆向学习（二）砸壳原理之dumpdecrypted/" target="_blank" rel="noopener">iOS逆向学习（二）砸壳原理之dumpdecrypted</a></li>
+<li><a href="https://benarvintec.com/2019/06/29/iOS逆向学习（三）砸壳原理之frida-ios-dump/" target="_blank" rel="noopener">iOS逆向学习（三）砸壳原理之frida-ios-dump</a></li>
+</ul>
+<h2 id="3、静态分析"><a href="#3、静态分析" class="headerlink" title="3、静态分析"></a>3、静态分析</h2><p>到了这里，攻击者已经拿到了ipa文件。接下来，攻击者会使用下面这些常见的手段，来对我们的ipa进行静态分析：</p>
+<ul>
+<li>class-dump：导出所有OC代码的.h文件并分析</li>
+<li>MachOView：直接阅读分析Mach-O文件</li>
+<li>IDA/Hopper：进行反编译并分析汇编代码</li>
+</ul>
+<p>那该怎么阻止静态分析呢？答案就是混淆。</p>
+<p>混淆分成两种，一种是高级语言层面的混淆，也就是大家常说的代码混淆、硬编码混淆。我们平时写代码的时候，为了阅读方便，写的类名、方法名，都会多多少少的跟代码功能挂钩。比如用到了manager字样的，大多就是管理器，但是这也同样方便了攻击者进行静态分析。所以代码混淆的目的，就是在编译打包环节，把易于理解的类名、方法名，通过一定规则，替换成难以理解的形式，比如直接MD5。不过需要注意的是，大规模乱码式的代码混淆，可能会面临审核被拒的风险。其次硬编码混淆的作用，就是对代码中的字符串硬编码进行加密，以避免攻击者可以直接阅读。对于高级语言层面的混淆，更多的细节讨论，可以参照我之前的帖子：</p>
+<p><a href="https://benarvintec.com/2018/11/26/iOS硬编码混淆/" target="_blank" rel="noopener">iOS硬编码混淆</a></p>
+<p>除了上面说的高级语言层面的混淆，我们还可以做汇编语言层面的混淆。这块的实现，主要是建立在LLVM的修改上的。具体细节我还没开始研究，不过这里有个开源的工具链接，感兴趣的话可以先自己研究下：</p>
+<p><a href="https://github.com/obfuscator-llvm/obfuscator" target="_blank" rel="noopener">Obfuscator-LLVM</a></p>
+<h2 id="4、动态调试"><a href="#4、动态调试" class="headerlink" title="4、动态调试"></a>4、动态调试</h2><p>动态调试的方法其实很多，可以在越狱环境下，直接运行APP以后，使用LLDB指令或者Cycript工具进行调试。也可以把ipa包集成到MonkeyDev工程里，然后在非越狱环境下，使用XCode进行动态调试。先不管两种方式的区别，其共同点都在于，我们的APP能正常运行，或者说至少不退出，攻击者才有机会进行操作。那该怎样操作呢？</p>
+<p>对于在越狱环境下的动态调试，我们可以采用越狱环境检测+APP主动退出的方案。而对于非越狱环境下的XCode调试，就可以采用debug状态检测+APP主动退出的方案。越狱环境检测的方案前面说过了，我们来聊下debug状态检测+APP主动退出。现在常见的检测方案大致有下面几种：</p>
+<ul>
+<li>ptrace：直接阻止XCode调试，更多原理分析可以参照之前的帖子：<a href="https://benarvintec.com/2019/09/02/细说ptrace反调试/" target="_blank" rel="noopener">细说ptrace反调试</a></li>
+<li>sysctl：检测是否处于debug状态，需要手动退出APP</li>
+<li>isatty：同上</li>
+<li>ioctl：同上</li>
+</ul>
+<p>其他的方案大家也可以自己搜索一下，总的来说。debug状态检测的技术实现方案并不多，就算加上汇编化之类的变种也是有限的。所以攻击者可以消耗较少的精力，来绕过这些检测。</p>
+<p>除去上面说的两种防御方案，我们发现攻击者采用的动态调试方案，大多还是依赖dylib注入的。所以我们还可以通过<code>__RESTRICT</code>设置，来禁止dylib注入。但是很不幸，<code>__RESTRICT</code>可以通过修改可执行文件的源文件绕过，所以也比较容易攻破。</p>
+<h2 id="5、重签多开"><a href="#5、重签多开" class="headerlink" title="5、重签多开"></a>5、重签多开</h2><p>重签多开的意思，是指攻击者用自己的证书，对我们的ipa包进行重签名，并同时运行多个，这是黑产常用的一种手段。那怎么预防？老样子，先检测。</p>
+<p>我们知道，每个iOS应用都有着唯一的ID，也就是bundleID，而想要实现重签多开，就必然要改变原有的bundleID。所以，这个环节的防御，我们主要还是集中在对Info.plist文件的改动检测上。我们可以直接通过系统API NSBundle来读取Info.plist文件信息，也可以通过对应的CoreFoundation方法来做。当然这两种方式显而易见是不安全的，攻击者随手写个hook就可以攻破。所以我们就换个方式，使用其他的方案直接读取Info.plist文件，比如NSData、mmap、拷贝一份改个名字再读等等等等。反正读取文件的方式千千万，可以让攻击者疲于奔命。</p>
+<p>那检测到了以后，怎么阻止呢？也是同样的道理，我们可以选择功能关闭或者退出APP。而在前面的部分，我们也说过主动退出APP的方式是不好的，至于为什么不好，我们现在来聊一聊。</p>
+<p>我们可以选择的主动退出APP的方案，其实并不多。主要就是构造crash、调用terminateWithSuccess之类的上层API、调用exit之类的系统底层API。要想攻破这些并不困难，对于crash可以根据栈帧定位我们的崩溃代码，上层API直接hook就好。exit之类的底层API，如果是直接使用那也就直接hook搞定。如果是汇编化的变种，直接使用IDA修改源文件就行。</p>
+<p>更多的APP主动退出方法，可以参照我的开源实验工程：<a href="https://github.com/BenArvin/iOSAppExitTest" target="_blank" rel="noopener">https://github.com/BenArvin/iOSAppExitTest</a></p>
+<h2 id="6、反逆向方案"><a href="#6、反逆向方案" class="headerlink" title="6、反逆向方案"></a>6、反逆向方案</h2><p>前面我们聊完了攻击者常用的逆向方法，和对应的防御方案，那么我们的反逆向方案应该设计成什么样子呢？</p>
+<p>首先，我们要明白，我们的一切工作，都不能完全的防御所有攻击，我们所做的只是增加攻击者的攻击成本。所以，对于主动退出APP这种技术方案有限，攻击者在攻击时有迹可循的防御方案，我们都不应该投入精力去建设。相应的，我们的反逆向方案，应该建设成下面的样子：</p>
+<ul>
+<li>1）编写阶段：对核心功能，采用C语言、汇编语言等静态语言编写</li>
+<li>2）编译阶段混淆：代码混淆、硬编码混淆、资源文件混淆、汇编混淆等</li>
+<li>3）运行阶段逆向检测：越狱环境检测、重签多开检测等</li>
+<li>4）运行阶段功能限制：代码开关、封号、封手机等</li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+       
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+            <a href="/tags/逆向/" rel="tag"># 逆向</a>
+          
+            <a href="/tags/加固/" rel="tag"># 加固</a>
+          
+            <a href="/tags/安全/" rel="tag"># 安全</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/02/细说ptrace反调试/" rel="next" title="细说ptrace反调试">
+                <i class="fa fa-chevron-left"></i> 细说ptrace反调试
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/01/13/Xcode垃圾清理/" rel="prev" title="Xcode垃圾清理">
+                Xcode垃圾清理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ben Arvin</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v6.6.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.6.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.6.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.6.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.6.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.6.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

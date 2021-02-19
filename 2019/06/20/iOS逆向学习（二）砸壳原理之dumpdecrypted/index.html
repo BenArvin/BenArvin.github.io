@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.6.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.6.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.6.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '6.6.0',
+    sidebar: {"position":"left","display":"remove","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="1、基本原理从AppStore中下载的包，是被苹果使用FairPlay技术加密的，没办法直接重签名给其他人用，也不能做IDA分析之类的逆向操作。所以为了得到没有加密的包，就需要进行砸壳操作。 看完Mach-O文件跟dyld加载介绍后，使劲拍拍脑袋能想到两种砸壳思路：  1、直接破解FairPlay加密技术：很可惜暂时做不到，还没有公开的破解方案出来 2、从APP的加载运行入手，越过解密阶段，直接从">
+<meta name="keywords" content="iOS,逆向">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS逆向学习（二）砸壳原理之dumpdecrypted">
+<meta property="og:url" content="https://benarvin.github.io/2019/06/20/iOS逆向学习（二）砸壳原理之dumpdecrypted/index.html">
+<meta property="og:site_name" content="BenArvin&#39;s blog">
+<meta property="og:description" content="1、基本原理从AppStore中下载的包，是被苹果使用FairPlay技术加密的，没办法直接重签名给其他人用，也不能做IDA分析之类的逆向操作。所以为了得到没有加密的包，就需要进行砸壳操作。 看完Mach-O文件跟dyld加载介绍后，使劲拍拍脑袋能想到两种砸壳思路：  1、直接破解FairPlay加密技术：很可惜暂时做不到，还没有公开的破解方案出来 2、从APP的加载运行入手，越过解密阶段，直接从">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2021-02-19T08:49:21.054Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="iOS逆向学习（二）砸壳原理之dumpdecrypted">
+<meta name="twitter:description" content="1、基本原理从AppStore中下载的包，是被苹果使用FairPlay技术加密的，没办法直接重签名给其他人用，也不能做IDA分析之类的逆向操作。所以为了得到没有加密的包，就需要进行砸壳操作。 看完Mach-O文件跟dyld加载介绍后，使劲拍拍脑袋能想到两种砸壳思路：  1、直接破解FairPlay加密技术：很可惜暂时做不到，还没有公开的破解方案出来 2、从APP的加载运行入手，越过解密阶段，直接从">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="BenArvin's blog" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="https://benarvin.github.io/2019/06/20/iOS逆向学习（二）砸壳原理之dumpdecrypted/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>iOS逆向学习（二）砸壳原理之dumpdecrypted | BenArvin's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">BenArvin's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">No code, no bug. No deploy, no error.</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://benarvin.github.io/2019/06/20/iOS逆向学习（二）砸壳原理之dumpdecrypted/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ben Arvin">
+      <meta itemprop="description" content="No code, no bug. No deploy, no error.">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="BenArvin's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">iOS逆向学习（二）砸壳原理之dumpdecrypted
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-06-20 23:00:00" itemprop="dateCreated datePublished" datetime="2019-06-20T23:00:00+08:00">2019-06-20</time>
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="1、基本原理"><a href="#1、基本原理" class="headerlink" title="1、基本原理"></a>1、基本原理</h2><p>从AppStore中下载的包，是被苹果使用FairPlay技术加密的，没办法直接重签名给其他人用，也不能做IDA分析之类的逆向操作。所以为了得到没有加密的包，就需要进行砸壳操作。</p>
+<p>看完Mach-O文件跟dyld加载介绍后，使劲拍拍脑袋能想到两种砸壳思路：</p>
+<ul>
+<li>1、直接破解FairPlay加密技术：很可惜暂时做不到，还没有公开的破解方案出来</li>
+<li>2、从APP的加载运行入手，越过解密阶段，直接从内存中读取被dyld解密后的内容</li>
+</ul>
+<p>所以目前常见的砸壳工作，都是使用第二种思路来做的，这里我们以dumpdecrypted为例进行分析。</p>
+<h2 id="2、dumpdecrypted"><a href="#2、dumpdecrypted" class="headerlink" title="2、dumpdecrypted"></a>2、dumpdecrypted</h2><p>dumpdecrypted分为<a href="https://github.com/stefanesser/dumpdecrypted" target="_blank" rel="noopener">初代stefanesser做的版本</a>，和后面<a href="https://github.com/conradev/dumpdecrypted" target="_blank" rel="noopener">conradev改进的版本</a>。但其原理基本不变，改进版主要是为了能够dump出动态加载库。咱们这次的分析以改进版的为例，先看使用步骤：</p>
+<ul>
+<li>1、make生成.dylib文件</li>
+<li>2、使用ssh把dylib文件放入目标app的沙盒路径下</li>
+<li>3、执行砸壳并导出砸壳后的ipa文件</li>
+</ul>
+<p>除了使用步骤以外，dumpdecrypted还要求手机中已经安装了cycript。所以我们不难看出，dumpdecrypted是通过dylid的方式，介入到dyld的加载过程中的。</p>
+<p>然后再看源码，主要定义了三个函数：<code>dumptofile</code>、<code>image_added</code>、<code>dumpexecutable</code>，没有main函数。但可以看出这三个函数大致的调用关系，是<code>dumpexecutable</code> -&gt; <code>image_added</code> -&gt; <code>dumptofile</code>。继续分析，<code>dumpexecutable</code>是如何被调用的呢。答案在于其方法定义上：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">__attribute__((constructor))</span><br><span class="line">static void dumpexecutable() &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>把换行去掉，就成了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">__attribute__((constructor)) static void dumpexecutable() &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中比较特殊的是<code>__attribute__((constructor))</code>这一段，可以大致理解成使用这段话，让我们新定义的<code>dumpexecutable</code>方法，在main函数之前被执行。而其得以做到的原因，就在于首先<code>constructor</code>函数，是在main函数之前执行的，而<code>__attribute__</code>修饰，又使得我们新定义的方法，可以和<code>constructor</code>一道，在main函数之前执行。这部分更详细的解释可以参照GUNC的文档</p>
+<blockquote>
+<p><a href="https://gcc.gnu.org/onlinedocs/gcc-6.2.0/gcc/Common-Function-Attributes.html" target="_blank" rel="noopener">The constructor attribute causes the function to be called automatically before execution enters main ().</a></p>
+</blockquote>
+<p>所以重新梳理一下大致的调用关系：<code>constructor</code> -&gt; <code>dumpexecutable</code> -&gt; <code>image_added</code> -&gt; <code>dumptofile</code>，需要注意这里说的调用关系仅仅是大致的。</p>
+<p>弄清了整个的启动时机后，再看<code>dumpexecutable</code>函数内部，实际的操作只做了一件事：<code>_dyld_register_func_for_add_image(&amp;image_added);</code>。因为咱们已经意识到整个砸壳过程是跟dyld有关的，所以可以从dyld源码中找到对<code>_dyld_register_func_for_add_image</code>的解释</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * _dyld_register_func_for_add_image registers the specified function to be</span><br><span class="line"> * called when a new image is added (a bundle or a dynamic shared library) to</span><br><span class="line"> * the program.  When this function is first registered it is called for once</span><br><span class="line"> * for each image that is currently part of the program.</span><br><span class="line"> */</span><br><span class="line">void</span><br><span class="line">_dyld_register_func_for_add_image(</span><br><span class="line">void (*func)(const struct mach_header *mh, intptr_t vmaddr_slide))</span><br></pre></td></tr></table></figure>
+<p>大致的意思，就是说注册了一个监听方法，用于监听bundle或者动态加载库的加载事件，而且加载事件，对于每个bundle或者动态库仅会触发一次。到这里，我们就可以梳理出整个砸壳工具的逻辑顺序了：</p>
+<ul>
+<li>1、伴随<code>constructor</code>函数的调用，在main函数执行前，调用<code>dumpexecutable</code>函数</li>
+<li>2、在<code>dumpexecutable</code>函数中，注册bundle或动态库的加载事件监听，而且其响应方法是<code>image_added</code>函数</li>
+<li>3、当bundle或者动态库被加载时，触发事件监听，调用<code>image_added</code>方法，并向其传递header结构体指针，和另外一个不知道有什么用的参数slide</li>
+<li>4、然后在<code>image_added</code>方法内，调用<code>dumptofile</code>函数，进行真正的文件导出工作</li>
+</ul>
+<p>所以到这里，我们转向<code>dumptofile</code>函数，看一下其内部实现。越过前面的变量定义，首先看这一段</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">/* extract basename */</span><br><span class="line">tmp = strrchr(rpath, &apos;/&apos;);</span><br><span class="line">printf(&quot;\n\n&quot;);</span><br><span class="line">if (tmp == NULL) &#123;</span><br><span class="line">	printf(&quot;[-] Unexpected error with filename.\n&quot;);</span><br><span class="line">	_exit(1);</span><br><span class="line">&#125; else &#123;</span><br><span class="line">	printf(&quot;[+] Dumping %s\n&quot;, tmp+1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这块的作用，是把路径进行裁剪，得到目标APP的文件名。然后下面这一段：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">/* detect if this is a arm64 binary */</span><br><span class="line">if (mh-&gt;magic == MH_MAGIC_64) &#123;</span><br><span class="line">	lc = (struct load_command *)((unsigned char *)mh + sizeof(struct mach_header_64));</span><br><span class="line">	printf(&quot;[+] detected 64bit ARM binary in memory.\n&quot;);</span><br><span class="line">&#125; else &#123; /* we might want to check for other errors here, too */</span><br><span class="line">	lc = (struct load_command *)((unsigned char *)mh + sizeof(struct mach_header));</span><br><span class="line">	printf(&quot;[+] detected 32bit ARM binary in memory.\n&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>大致的作用，是通过对Mach-O文件中，header的magic字段进行判断，判断当前可执行文件是32还是64位的。然后，因为Mach-O文件的内容是连续的，所以可以通过header指针加上header区间大小的方式，拿到load commands的指针。</p>
+<p>拿到了指针之后，再下一段代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">for (i=0; i&lt;mh-&gt;ncmds; i++) &#123;</span><br><span class="line">	if (lc-&gt;cmd == LC_ENCRYPTION_INFO || lc-&gt;cmd == LC_ENCRYPTION_INFO_64) &#123;</span><br></pre></td></tr></table></figure>
+<p>通过<code>mh-&gt;ncmds</code>得到load commands数量，对所有load command进行遍历。而在for循环内部，则对load command进行类型判断，只有当是<code>LC_ENCRYPTION_INFO</code>或者<code>LC_ENCRYPTION_INFO_64</code>类型时，才进入下一步。在Mach-O文档里没有找到<code>LC_ENCRYPTION_INFO</code>，但是可以google一下，大致的意思是加密相关的。所以我们可以把这个if语句，简单的理解成过滤加密相关的load command。然后继续深入if语句内部，首先是这么一段：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">eic = (struct encryption_info_command *)lc;</span><br><span class="line">/* If this load command is present, but data is not crypted then exit */</span><br><span class="line">if (eic-&gt;cryptid == 0) &#123;</span><br><span class="line">	break;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>为了理解这段，得先看<code>encryption_info_command</code>的定义：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * The encryption_info_command contains the file offset and size of an</span><br><span class="line"> * of an encrypted segment.</span><br><span class="line"> */</span><br><span class="line">struct encryption_info_command &#123;</span><br><span class="line">   uint32_t	cmd;		/* LC_ENCRYPTION_INFO */</span><br><span class="line">   uint32_t	cmdsize;	/* sizeof(struct encryption_info_command) */</span><br><span class="line">   uint32_t	cryptoff;	/* file offset of encrypted range */</span><br><span class="line">   uint32_t	cryptsize;	/* file size of encrypted range */</span><br><span class="line">   uint32_t	cryptid;	/* which enryption system,</span><br><span class="line">				   0 means not-encrypted yet */</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>然后结合这段代码的注释理解下，大致意思可能是说从<code>LC_ENCRYPTION_INFO</code>类型的load command，取出数据的加密状态，如果不是被加密的状态就中断执行。继续往下看这一段：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">off_cryptid=(off_t)((void*)&amp;eic-&gt;cryptid - (void*)mh);</span><br><span class="line">printf(&quot;[+] offset to cryptid found: @%p(from %p) = %x\n&quot;, &amp;eic-&gt;cryptid, mh, off_cryptid);</span><br><span class="line">printf(&quot;[+] Found encrypted data at address %08x of length %u bytes - type %u.\n&quot;, eic-&gt;cryptoff, eic-&gt;cryptsize, eic-&gt;cryptid);</span><br></pre></td></tr></table></figure>
+<p>第一句的意思，是通过<code>(void*)eic-&gt;cryptid</code>减去<code>(void*)mh</code>的方式，得到cryptid偏移量。然后最后一句，输出的日志里表示从<code>eic-&gt;cryptoff</code>开始，<code>eic-&gt;cryptsize</code>大小的区域，都是已经被dyld解密并加载后的内容。</p>
+<p>继续看源码，下面跟着的一大段，主要用处是读取Mach-O文件的header内容，所以就不贴源码了。但其中比较特殊的一段if语句：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/* Is this a FAT file - we assume the right endianess */</span><br><span class="line">if (fh-&gt;magic == FAT_CIGAM) &#123;</span><br></pre></td></tr></table></figure>
+<p>这段的作用，是区分FAT类型Mach-O文件，然后重定位到真正的header地址。再往下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">strlcpy(npath, tmp+1, sizeof(npath));</span><br><span class="line">strlcat(npath, &quot;.decrypted&quot;, sizeof(npath));</span><br><span class="line">strlcpy(buffer, npath, sizeof(buffer));</span><br><span class="line"></span><br><span class="line">printf(&quot;[+] Opening %s for writing.\n&quot;, npath);</span><br><span class="line">outfd = open(npath, O_RDWR|O_CREAT|O_TRUNC, 0644);</span><br><span class="line">if (outfd == -1) &#123;</span><br><span class="line">	if (strncmp(&quot;/private/var/mobile/Applications/&quot;, rpath, 33) == 0) &#123;</span><br><span class="line">		printf(&quot;[-] Failed opening. Most probably a sandbox issue. Trying something different.\n&quot;);</span><br><span class="line">		</span><br><span class="line">		/* create new name */</span><br><span class="line">		strlcpy(npath, &quot;/private/var/mobile/Applications/&quot;, sizeof(npath));</span><br><span class="line">		tmp = strchr(rpath+33, &apos;/&apos;);</span><br><span class="line">		if (tmp == NULL) &#123;</span><br><span class="line">			printf(&quot;[-] Unexpected error with filename.\n&quot;);</span><br><span class="line">			_exit(1);</span><br><span class="line">		&#125;</span><br><span class="line">		tmp++;</span><br><span class="line">		*tmp++ = 0;</span><br><span class="line">		strlcat(npath, rpath+33, sizeof(npath));</span><br><span class="line">		strlcat(npath, &quot;tmp/&quot;, sizeof(npath));</span><br><span class="line">		strlcat(npath, buffer, sizeof(npath));</span><br><span class="line">		printf(&quot;[+] Opening %s for writing.\n&quot;, npath);</span><br><span class="line">		outfd = open(npath, O_RDWR|O_CREAT|O_TRUNC, 0644);</span><br><span class="line">	&#125;</span><br><span class="line">	if (outfd == -1) &#123;</span><br><span class="line">		perror(&quot;[-] Failed opening&quot;);</span><br><span class="line">		printf(&quot;\n&quot;);</span><br><span class="line">		_exit(1);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这块是创建一个文件路径并open得到句柄，里面一大堆复杂的if判断，主要是用来处理文件操作失败的情况。而这个新创建的文件，就是以后我们会得到的砸壳输出结果文件。继续往下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">/* calculate address of beginning of crypted data */</span><br><span class="line">n = fileoffs + eic-&gt;cryptoff;</span><br><span class="line">	</span><br><span class="line">restsize = lseek(fd, 0, SEEK_END) - n - eic-&gt;cryptsize;			</span><br><span class="line">lseek(fd, 0, SEEK_SET);</span><br><span class="line">	</span><br><span class="line">printf(&quot;[+] Copying the not encrypted start of the file\n&quot;);</span><br><span class="line">/* first copy all the data before the encrypted data */</span><br><span class="line">while (n &gt; 0) &#123;</span><br><span class="line">	toread = (n &gt; sizeof(buffer)) ? sizeof(buffer) : n;</span><br><span class="line">	r = read(fd, buffer, toread);</span><br><span class="line">	if (r != toread) &#123;</span><br><span class="line">		printf(&quot;[-] Error reading file\n&quot;);</span><br><span class="line">		_exit(1);</span><br><span class="line">	&#125;</span><br><span class="line">	n -= r;</span><br><span class="line">	</span><br><span class="line">	r = write(outfd, buffer, toread);</span><br><span class="line">	if (r != toread) &#123;</span><br><span class="line">		printf(&quot;[-] Error writing file\n&quot;);</span><br><span class="line">		_exit(1);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">	</span><br><span class="line">/* now write the previously encrypted data */</span><br><span class="line">printf(&quot;[+] Dumping the decrypted data into the file\n&quot;);</span><br><span class="line">r = write(outfd, (unsigned char *)mh + eic-&gt;cryptoff, eic-&gt;cryptsize);</span><br><span class="line">if (r != eic-&gt;cryptsize) &#123;</span><br><span class="line">	printf(&quot;[-] Error writing file\n&quot;);</span><br><span class="line">	_exit(1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这块就是向输出文件写入数据了，主要分成三步：</p>
+<ul>
+<li>第一步：计算并定位到解密数据的起始位置</li>
+<li>第二步：把解密数据位置前的数据，写入到输出文件内，这部分的数据估计是包含了header的标识位信息</li>
+<li>第三步：把解密数据写入到文件内。</li>
+</ul>
+<p>然后再往下，直到整个<code>dumptofile</code>函数结束，剩下的代码段的作用，在于把剩下的数据一并写入输出文件里，并关闭文件句柄。</p>
+<p>至此整个dumpdecrypted砸壳工具的代码已经分析完了，但是也留下了这几个问题：</p>
+<ul>
+<li><strong><em>在判断加密状态那一段，当数据处于非加密的时候，为什么是break，而不是continue</em></strong></li>
+<li><strong><em>在数据读取及写入阶段，加密数据段之前、之后的内容，具体是哪些数据</em></strong></li>
+</ul>
+<p>这些问题估计可以从Mach-O文件格式里面找到答案，所以还得再回头研究Mach-O文件。</p>
+<h2 id="3、参考资料"><a href="#3、参考资料" class="headerlink" title="3、参考资料"></a>3、参考资料</h2><ul>
+<li>Mach-O文档：<a href="https://web.archive.org/web/20090901205800/http://developer.apple.com/mac/library/documentation/DeveloperTools/Conceptual/MachORuntime/Reference/reference.html#//apple_ref/doc/uid/TP40000895-CH248-95908" target="_blank" rel="noopener">https://web.archive.org/web/20090901205800/http://developer.apple.com/mac/library/documentation/DeveloperTools/Conceptual/MachORuntime/Reference/reference.html#//apple_ref/doc/uid/TP40000895-CH248-95908</a></li>
+<li>dyld源码：<a href="https://github.com/opensource-apple/dyld" target="_blank" rel="noopener">https://github.com/opensource-apple/dyld</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+       
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+            <a href="/tags/逆向/" rel="tag"># 逆向</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/27/iOS逆向学习（一）基础/" rel="next" title="iOS逆向学习（一）基础">
+                <i class="fa fa-chevron-left"></i> iOS逆向学习（一）基础
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/29/iOS逆向学习（三）砸壳原理之frida-ios-dump/" rel="prev" title="iOS逆向学习（三）砸壳原理之frida-ios-dump">
+                iOS逆向学习（三）砸壳原理之frida-ios-dump <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ben Arvin</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v6.6.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.6.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.6.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.6.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.6.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.6.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

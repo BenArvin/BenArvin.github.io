@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.6.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.6.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.6.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '6.6.0',
+    sidebar: {"position":"left","display":"remove","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="因为本文的意图，是把一系列的知识点串联起来，而不是逐个的深入分析，所以将会比较笼统。想要了解更多的细节，你可以参照文末的参考资料，或者自己搜索下各个知识点。当然，以后我也会不定期的针对某些点研究后再发文介绍。那么我们就开始吧。 先从第一步，也就是显示一张图片说起。对于我们开发人员来说，在iOS代码里面，想要显示一张图片，只需要新建一个UIImage，然后赋值到UIImageView里面就行。简而言">
+<meta name="keywords" content="iOS,性能,OpenGL,图像处理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="图像显示、OpenGL、离屏渲染、滤镜等等的一些小事">
+<meta property="og:url" content="https://benarvin.github.io/2019/08/24/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/index.html">
+<meta property="og:site_name" content="BenArvin&#39;s blog">
+<meta property="og:description" content="因为本文的意图，是把一系列的知识点串联起来，而不是逐个的深入分析，所以将会比较笼统。想要了解更多的细节，你可以参照文末的参考资料，或者自己搜索下各个知识点。当然，以后我也会不定期的针对某些点研究后再发文介绍。那么我们就开始吧。 先从第一步，也就是显示一张图片说起。对于我们开发人员来说，在iOS代码里面，想要显示一张图片，只需要新建一个UIImage，然后赋值到UIImageView里面就行。简而言">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://benarvin.github.io/images/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/img_1.png">
+<meta property="og:image" content="https://benarvin.github.io/images/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/img_2.png">
+<meta property="og:image" content="https://benarvin.github.io/images/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/img_3.png">
+<meta property="og:image" content="https://benarvin.github.io/images/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/img_4.png">
+<meta property="og:image" content="https://benarvin.github.io/images/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/img_5.png">
+<meta property="og:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuTBGqbJGjLDukN3RywQTp-SslEZSz7Jc2YuqFaZ9qzdxdhOslrZS-hArbmkP0vPiN_1axrI4VZG-M4bhvxC5hKzxfd71MI3XvvtjpzPjHUX4uuEKEEOKP2G-szhzOltKf_rTpxPlVpgXWmkR84Wnq4DS3gbvAK3F0G00">
+<meta property="og:image" content="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuTBGqbJGjLDukN3RywQTp-SslEZSz7Jc2YuqFaZ9qzdxdhOslrZS-hArbmkP0vPiN_1axrI4VZG-M4bhvxC5hKzxfd71MI3XvvtjpzPjHUXylcldymbj2dfwMAHG-I3TZZa56OdFjdQ_M3_rQN_Ni-tRdqxeuC8c258Cz2kNGsfU2j3V0000">
+<meta property="og:image" content="https://benarvin.github.io/images/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/img_6.png">
+<meta property="og:updated_time" content="2021-02-19T08:49:21.054Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="图像显示、OpenGL、离屏渲染、滤镜等等的一些小事">
+<meta name="twitter:description" content="因为本文的意图，是把一系列的知识点串联起来，而不是逐个的深入分析，所以将会比较笼统。想要了解更多的细节，你可以参照文末的参考资料，或者自己搜索下各个知识点。当然，以后我也会不定期的针对某些点研究后再发文介绍。那么我们就开始吧。 先从第一步，也就是显示一张图片说起。对于我们开发人员来说，在iOS代码里面，想要显示一张图片，只需要新建一个UIImage，然后赋值到UIImageView里面就行。简而言">
+<meta name="twitter:image" content="https://benarvin.github.io/images/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/img_1.png">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="BenArvin's blog" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="https://benarvin.github.io/2019/08/24/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>图像显示、OpenGL、离屏渲染、滤镜等等的一些小事 | BenArvin's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">BenArvin's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">No code, no bug. No deploy, no error.</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://benarvin.github.io/2019/08/24/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ben Arvin">
+      <meta itemprop="description" content="No code, no bug. No deploy, no error.">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="BenArvin's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">图像显示、OpenGL、离屏渲染、滤镜等等的一些小事
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-08-24 22:00:00" itemprop="dateCreated datePublished" datetime="2019-08-24T22:00:00+08:00">2019-08-24</time>
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>因为本文的意图，是把一系列的知识点串联起来，而不是逐个的深入分析，所以将会比较笼统。想要了解更多的细节，你可以参照文末的参考资料，或者自己搜索下各个知识点。当然，以后我也会不定期的针对某些点研究后再发文介绍。那么我们就开始吧。</p>
+<p>先从第一步，也就是显示一张图片说起。对于我们开发人员来说，在iOS代码里面，想要显示一张图片，只需要新建一个<code>UIImage</code>，然后赋值到<code>UIImageView</code>里面就行。简而言之，我们直观所得的，就像是下面这张图里的样子：</p>
+<p><img src="/images/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/img_1.png" alt></p>
+<p>但我们都知道，底层过程明显不是这么简单。所以继续深入挖掘，搜索一下相关的技术帖，我们发现新建<code>UIImage</code>对象时，仅仅是获取了图片的引用，并不是我们想象中的，直接就拿到了图片数据，然后把数据丢到屏幕上显示出来。</p>
+<p>那是如何通过这个图片引用，把真正的图片内容显示出来的呢？研究下<code>SDWebImage</code>源码，我们发现其在子线程中，对下载完成后的图片，进行了一次decode操作。而这个decode操作，具体是做了什么。很多技术帖都解释过，是因为在iOS系统中，不会立即将<code>UIImage</code>所指向的图片数据进行解码，而是等到真正显示的时候，才会进行这个操作。但是真正显示的时候又是在主线程上的，所以为了减少对主线程的消耗，就在子线程上，提前对图片数据进行解码操作。</p>
+<p>这一段话我们大多已经很熟悉了，但是图片的解码到底是解了什么。从矢量图、位图开始说起。</p>
+<p>矢量图、位图我们都清楚，一个保存的是点、线等位置信息，一个保存的是像素集合。除了工程作图等比较少的场合，用的是矢量图以外，我们网页浏览、iOS工程中用的，大多数都是位图。因为位图保存的是像素集合，所以会记录下每个像素的颜色数据，常见的颜色数据格式有RGB、YUV、CMYK等。</p>
+<p>那我们常见的<code>png</code>、<code>jpeg</code>格式又是什么。设想一下，如果不进行任何处理，直接保存下图片每个像素的颜色数据，形成一个二维数据矩阵，这样虽然可以对图片数据进行完整保存，但文件大小也必然是巨大的。所以为了减小图片文件的体积，我们需要用一些有损或者无损的压缩算法，对原始的数据进行压缩。因此，就出现了我们<code>png</code>、<code>jpeg</code>两种常见的图片文件格式。其中<code>png</code>用的是无损压缩算法，<code>jpeg</code>用的则是有损的压缩算法。</p>
+<p>了解了图片的基本概念之后，再回到之前的图片数据解码操作，我们就明白了，这个操作的目的，就是把被压缩后的图片数据，恢复成可以用来显示的位图数据。同时，再扩展一点，<code>png</code>和<code>jpeg</code>两种格式的数据，哪一种解码更快呢？答案是<code>png</code>格式，因为大多数情况下，<code>jpeg</code>所使用的压缩算法要更复杂。</p>
+<p>聊到这里，我们回过头再看一眼之前的图片显示流程，就变成了下面这个样子：</p>
+<p><img src="/images/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/img_2.png" alt></p>
+<p>但是解码之后的数据，在代码上的表现是什么样的呢？我们来看<code>SDWebImage</code>中，用来进行解码的这行核心代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CGImageRef destImageRef = CGBitmapContextCreateImage(destContext);</span><br></pre></td></tr></table></figure>
+<p>可以看出是用到了<code>CoreGraphics</code>的API，然后我们再搜索一下最常见的<code>CGImageRef</code>数据类型，其本质是一个指向图片像素数据的，C语言结构体数据指针。同时我们也在其他技术帖中，知道了<code>CoreGraphics</code>库，就是系统绘制UI、文字、图片的基础库。所以我们再完善下图片显示流程：</p>
+<p><img src="/images/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/img_3.png" alt></p>
+<p>到了这一步之后，我们还是想问。既然图片已经被解码成了点阵像素数据，那又是如何显示到屏幕上的呢？我们知道GPU在其中起到了很重要的作用，可以理解成我们的图像数据，先是磁盘中读取出来，交由CPU进行解码操作，然后再把解码后的数据，交给GPU进行变换、合成一系列的操作。紧接着，处理完成的数据被提交到帧缓冲区里，直到VSync信号抵达，帧缓冲区里的数据被最终绘制到屏幕上。大致的流程就像下面这样：</p>
+<p><img src="/images/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/img_4.png" alt></p>
+<p>再继续追问，GPU又是怎样去做变换、合成这些操作的呢？CPU的数据又是怎样传递给GPU的呢？我们先聊第一个问题。</p>
+<p>大家肯定都听过<code>OpenGL</code>，<code>OpenGL</code>是一个规范，或者说是一个API接口规范。其提供的那些API，就是用来控制GPU的变换、合成等操作的。而其规定的那些API接口的具体实现，则是显卡厂商、苹果公司去实现的。至于<code>OpenGL</code>的具体细节后面再聊，我们先继续解释第二个问题，即CPU的数据是怎样传递给GPU的。</p>
+<p>首先GPU中包含着一部分显存空间(VRAM)，在设备启动的时候，作为PCI设备的GPU，其显存空间中的一部分地址，会被映射到PCI地址中，然后再把PCI总线上的地址映射到CPU地址中。这样，CPU就能通过对这段映射后的地址的访问，访问到GPU的存储空间。此外，还可以通过内存空间进行数据交互。首先系统为GPU动态分配一些不连续的内存空间(GTT)，用于映射到GPU的显存空间中。然后CPU通过对这段内存空间的访问，进行对GPU显存空间的访问。最后，除了以上两种方式以外，还可以通过DMA方式，进行数据交互。而对于GPU指令来说，则是直接由CPU通过PCI总线推送到GPU中，或者由GPU自己，从指令流中获取指令。更多具体的细节，可以参照介绍CPU、GPU协同的技术帖。</p>
+<p>抛开底层的硬件实现细节，总的来说我们可以认为，在<code>CoreGraphics</code>库，和GPU之间，存在着<code>OpenGL</code>这一层。至于为什么把<code>OpenGL</code>单独看成一层，是因为<code>OpenGL</code>实际上并不是完全运行在GPU上，其一部分API的实现，还是运行在CPU中的。于是我们再次修改一下流程图：</p>
+<p><img src="/images/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/img_5.png" alt></p>
+<p>至此，我们就把大致的图片显示过程弄清楚了。接下来，我们继续聊<code>OpenGL</code>。</p>
+<h3 id="OpenGL"><a href="#OpenGL" class="headerlink" title="OpenGL"></a>OpenGL</h3><p>先解释几个名词：</p>
+<ul>
+<li><code>OpenGL</code>：这个前面咱们聊过，可以理解成一个API接口规范，具体实现则交给硬件厂商来做</li>
+<li><code>OpenGL ES</code>：<code>OpenGL</code>的子集，专门针对手机、平板等嵌入式设备</li>
+<li><code>GLSL</code>：用于编写<code>OpenGL</code>着色器的专门语言</li>
+<li><code>GLSL ES</code>：像<code>OpenGL ES</code>是<code>OpenGL</code>的子集一样，是<code>GLSL</code>的子集</li>
+<li>固定渲染管线：在<code>OpenGL</code>的早期版本里，<code>OpenGL</code>提供了一套固定的着色器程序，我们只要调用API设置好参数就行了，这叫固定管线</li>
+<li>可编程渲染管线：在新版本里，<code>OpenGL</code>不再提供默认着色器程序，需要我们手动实现，虽然学习、使用的时候比较麻烦，但是灵活性更高了，这就叫可编程管线</li>
+</ul>
+<p>虽然有<code>OpenGL</code>、<code>OpenGL ES</code>的区别，但实际上其主要结构基本差不多，所以学习的时候任选一种都可以。而针对iOS开发，我们就选<code>OpenGL ES</code>和<code>GLSL ES</code>。</p>
+<p>至于各个新老版本的区别、联系和对应关系，我们只关注iOS端的话大致像这样子：</p>
+<table>
+<thead>
+<tr>
+<th>OpenGL ES</th>
+<th>GLSL ES</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.0</td>
+<td>100</td>
+</tr>
+<tr>
+<td>3.0</td>
+<td>300</td>
+</tr>
+</tbody>
+</table>
+<p>更多的版本对应关系，可以看参照<a href="https://github.com/mattdesl/lwjgl-basics/wiki/GLSL-Versions" target="_blank" rel="noopener">这个链接</a>。</p>
+<p>然后，我们需要转变一个观念，我们日常的代码编写，对于函数、代码结构的设计，常见的方式是向函数传入数据、参数，然后函数返回新的数据，就像下面的伪代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- (object)function(object, param) &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>但在<code>OpenGL</code>中，我们经常找不到这个传入、传出的数据。这是因为，大多数<code>OpenGL</code>的API，都是在对一个公用的存储空间进行操作，每个操作的指令，导致公用存储空间内数据进行相应的变化，所以经常有技术帖说<code>OpenGL</code>实质上是个大型状态机。</p>
+<p>聊完了基本知识以后，就来看<code>OpenGL</code>的具体逻辑流程了。因为我们现在大多用的都是可编程渲染管线了，所以按照可编程管线的流程来说，大致分成这么几步：</p>
+<p><img src="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuTBGqbJGjLDukN3RywQTp-SslEZSz7Jc2YuqFaZ9qzdxdhOslrZS-hArbmkP0vPiN_1axrI4VZG-M4bhvxC5hKzxfd71MI3XvvtjpzPjHUX4uuEKEEOKP2G-szhzOltKf_rTpxPlVpgXWmkR84Wnq4DS3gbvAK3F0G00"></p>
+<p>我们用画个三角形的例子，挨个对每个阶段进行简单介绍：</p>
+<ul>
+<li>顶点着色器：<code>vertex Shader</code>，是根据顶点数据，确定三角形的三个顶点的位置</li>
+<li>图元装配：根据上一步的顶点位置，装配成基本的图元形状，比如三角形</li>
+<li>几何着色器：对上一步的图元进行变换，形成新的图元，具体细节还没研究</li>
+<li>光栅化：把图元映射为最终显示在屏幕上的像素，同时也会裁掉屏幕显示范围之外的内容</li>
+<li>片段着色器：<code>Fragment Shader</code>，计算每个像素的颜色，计算规则受了很多因素的影响，例如光照之类的3D场景数据</li>
+<li>Alpha测试及混合：因为每个屏幕像素点上，可能堆叠了多个颜色数据，所以就要根据深度、alpha值进行计算</li>
+</ul>
+<p>而反映到具体的iOS代码上，还要多出新建图层等等一系列操作，总的来说分成下面这几步：</p>
+<ul>
+<li>设置layer的类型为<code>CAEAGLLayer</code></li>
+<li>新建<code>EAGLContext</code>类型的上下文，并且设置为当前context</li>
+<li>清除掉之前旧的<code>renderBuffer</code>和<code>frameBuffer</code></li>
+<li>创建<code>renderBuffer</code>、<code>frameBuffer</code>并绑定</li>
+<li>分配<code>renderBuffer</code>的内存空间，并绑定到layer上</li>
+<li>构造顶点着色器并编译</li>
+<li>构造片段着色器并编译</li>
+<li>构造着色器程序，并关联顶点、片段着色器</li>
+<li>创建顶点对象，链接顶点属性</li>
+<li>设置背景色</li>
+<li>清空颜色缓冲数据</li>
+<li>设置渲染窗口</li>
+<li>激活着色器程序</li>
+<li>关联数据</li>
+<li>最终绘制</li>
+</ul>
+<p>步骤很多很复杂，不过按照场景不同，部分步骤是可以省略的，比如设置背景色。同时有部分步骤的顺序也是可以调整的，比如设置渲染窗口可以放在更前面执行。具体的样例代码，可以参照本文最后的github链接。</p>
+<p>这么一大串下来，我们就能搞定一个三角形的显示了。至于四边形、圆形的显示，可以参照各类<code>OpenGL</code>教程，通过图元组合的方式搞定。但是回到图片显示上来看，图片数据却是以纹理的形式，进入<code>OpenGL</code>渲染流程的，就像下面的流程图一样：</p>
+<p><img src="https://www.plantuml.com/plantuml/svg/SoWkIImgAStDuTBGqbJGjLDukN3RywQTp-SslEZSz7Jc2YuqFaZ9qzdxdhOslrZS-hArbmkP0vPiN_1axrI4VZG-M4bhvxC5hKzxfd71MI3XvvtjpzPjHUXylcldymbj2dfwMAHG-I3TZZa56OdFjdQ_M3_rQN_Ni-tRdqxeuC8c258Cz2kNGsfU2j3V0000"></p>
+<p>既然图片纹理数据，是在片段着色器阶段进入渲染管线的，那我们就明白了，纹理数据包含的，是存储各像素点颜色的位图数据。也就是说，我们可以在片段着色器里面，对图片每个像素点的颜色进行操作。于是，滤镜效果就有了实现的机会。</p>
+<h3 id="GPUImage滤镜"><a href="#GPUImage滤镜" class="headerlink" title="GPUImage滤镜"></a>GPUImage滤镜</h3><p><code>GPUImage</code>大家都知道，算是最出名的滤镜库了。我们先不管它的滤镜链、数据采集、存储、转化等等功能，只看单一滤镜的效果是如何实现的，用<code>GPUImageColorInvertFilter</code>这个滤镜举例。</p>
+<p>这个滤镜的作用是实现图片的反色，也就是下面这样的效果：</p>
+<p><img src="/images/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/img_6.png" alt></p>
+<p>我们直接看这个滤镜的源代码，主要起作用的部分，在于其自定义的片段着色器中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">varying highp vec2 textureCoordinate;</span><br><span class="line">uniform sampler2D inputImageTexture;</span><br><span class="line">void main() &#123;</span><br><span class="line">    lowp vec4 textureColor = texture2D(inputImageTexture, textureCoordinate);</span><br><span class="line">    gl_FragColor = vec4((1.0 - textureColor.rgb), textureColor.w);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>一句一句分析，第一句：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">varying highp vec2 textureCoordinate;</span><br></pre></td></tr></table></figure></p>
+<p>这句的作用，是接收从顶点着色器中传入的纹理坐标，至于纹理坐标的作用，具体可以参考各种<code>OpenGL</code>教程</p>
+<p>然后第二句：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">uniform sampler2D inputImageTexture;</span><br></pre></td></tr></table></figure></p>
+<p>这句的作用，是接收我们从代码中传入的纹理数据，具体的传入方式，可以参照文章最后的github工程</p>
+<p>再下一句：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lowp vec4 textureColor = texture2D(inputImageTexture, textureCoordinate);</span><br></pre></td></tr></table></figure></p>
+<p>这句的作用，是通过使用<code>GLSL</code>内建的<code>texture2D</code>函数获取纹素。听起来有点难懂，简单理解的话，可以认为是根据纹理数据，和坐标数据，得到屏幕上每个位置对应要显示的RGBA颜色。而得出的RGBA颜色，就被存在了<code>lowp</code>精度，<code>vec4</code>类型的变量<code>textureColor</code>中。</p>
+<p>最后一句：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gl_FragColor = vec4((1.0 - textureColor.rgb), textureColor.w);</span><br></pre></td></tr></table></figure></p>
+<p>这句我们分开看，首先第一部分<code>(1.0 - textureColor.rgb)</code>的意思，是把刚才得到的RGBA颜色数据中，单独取出RGB颜色值，每一位都和1.0相减，这样就能得到反色了的RGB值。然后再把反色后的RGB值，和原始的alpha值，也就是<code>textureColor.w</code>进行混合，得到新的<code>vec4</code>类型的，完整的反色了的，但alpha透明度没有变化的RGBA值。最后，把新的RGBA颜色值，赋值给<code>GLSL</code>内建颜色变量<code>gl_FragColor</code>，用来进行下一步的操作。</p>
+<p>至此，我们就弄明白了这个简单的反色滤镜，其实现原理是什么样的了。当然其他的高级滤镜，比如高斯模糊、贴图、人脸识别等等，也都大同小异，感兴趣的话可以挨个去分析源码。</p>
+<h3 id="离屏渲染"><a href="#离屏渲染" class="headerlink" title="离屏渲染"></a>离屏渲染</h3><p>我们都听过离屏渲染这个概念，也大都知道为了提升性能降低掉帧率，就得避免离屏渲染的出现。可是离屏渲染到底是什么？既然要避免，为什么还会存在呢？</p>
+<p>回到<code>OpenGL</code>这一段的内容，我们发现在显示一个三角形的代码中，包含了<code>renderBuffer</code>和<code>frameBuffer</code>两个东西。先聊聊这两个词的意思：</p>
+<ul>
+<li>renderBuffer：渲染缓冲，包含了一系列的几何、像素数据</li>
+<li>frameBuffer：帧缓冲，管理着渲染缓冲、纹理等一系列数据</li>
+</ul>
+<p>那为什么要存在离屏渲染呢？我们用不太准确但比较容易理解的说法来聊这事。假设想要把渲染管线的最终结果，显示到屏幕上，那就得有个缓冲用来存储每一帧需要渲染的数据，我们把这个缓冲称为默认帧缓冲。</p>
+<p>但是经过后面的发展，<code>OpenGL</code>需要支持不直接渲染到屏幕上的能力，也就是在默认帧缓冲之外，创建一个离屏渲染用的帧缓冲，用来存储纹理、几何、像素之类的数据，这样就方便我们对其中的数据，在离屏状态下进行操作、变换和部分复用来减少开支。举个例子，对于一个动画来说。如果直接生成输出每步的渲染数据，需要我们一遍遍完整的走过渲染管线。但是如果采用离屏渲染的方式，我们就可以直接复用离屏的<code>frameBuffer</code>里面的数据，然后根据每一步的变化进行微调得出最终显示效果，这样子的做法肯定是更高效的。</p>
+<p>只不过对于我们常见的列表滑动来说，我们事实上是不需要这样的一个操作，直接直出结果就好，省掉离屏<code>frameBuffer</code>数据切换过程这一步，反而更能节省时间。</p>
+<p>不过有些技术帖中，把离屏渲染分成了CPU、GPU两种情况。还有的技术帖中，说离屏上下文的切换其实很快没什么影响，真正有影响的是有没有使用硬件加速，或者是多余的<code>glFlush</code>、<code>glFinish</code>操作。但无论如何，通过减少GPU操作来降低性能负担这个想法是没错的。</p>
+<h3 id="其他性能优化方案"><a href="#其他性能优化方案" class="headerlink" title="其他性能优化方案"></a>其他性能优化方案</h3><p>除了避免离屏渲染以外，我们常见的性能优化方法，还有减少透明图层的数量、降低图片质量、对齐像素位等等方法。那这些方法的底层原理，我们可以大致对齐<code>OpenGL</code>渲染管线中的步骤。</p>
+<p>比如减少透明图层的数量，就是降低了Alpha测试阶段的计算量。降低图片质量，就是降低了纹理数据的生成、映射工作的计算量。对齐像素位，就对应着减少光栅化阶段，边缘模糊带来的计算量。</p>
+<p>当然这么简单对应不是十分的准确，毕竟这些因素也会导致CPU阶段的额外性能消耗，但不考虑细节的话，大致跟上一节中的离屏渲染一样，都是减少GPU操作这种思路。</p>
+<h3 id="OpenGL学习样例工程"><a href="#OpenGL学习样例工程" class="headerlink" title="OpenGL学习样例工程"></a>OpenGL学习样例工程</h3><p>如果需要<code>OpenGL</code>学习用的简单样例实现源码，可以点进这个github工程参考一下。</p>
+<p><a href="https://github.com/BenArvin/BAOpenGLLearning" target="_blank" rel="noopener">https://github.com/BenArvin/BAOpenGLLearning</a></p>
+<p>目前工程中包含了三角形、四边形、圆形、纹理渲染、简单滤镜之类的代码。复杂滤镜、3D效果之类的，后面再不定期更新上去。</p>
+<h3 id="部分参考资料"><a href="#部分参考资料" class="headerlink" title="部分参考资料"></a>部分参考资料</h3><p><a href="https://learnopengl-cn.github.io" target="_blank" rel="noopener">LearnOpenGL CN</a><br><a href="https://www.objc.io/issues/3-views/moving-pixels-onto-the-screen/#asynchronous-drawing" target="_blank" rel="noopener">Getting Pixels onto the Screen</a><br><a href="https://www.khronos.org/opengl/wiki/Main_Page" target="_blank" rel="noopener">OpenGL Wiki</a><br><a href="https://blog.csdn.net/u012611878/article/details/52215985" target="_blank" rel="noopener">PNG,JPEG,BMP,JIF图片格式详解及其对比</a><br><a href="https://blog.csdn.net/xiaowei7hao/article/details/78194937" target="_blank" rel="noopener">CPU与GPU协同工作</a><br><a href="https://blog.ibireme.com/2015/11/12/smooth_user_interfaces_for_ios/#more-41893" target="_blank" rel="noopener">iOS 保持界面流畅的技巧</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+       
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+            <a href="/tags/性能/" rel="tag"># 性能</a>
+          
+            <a href="/tags/OpenGL/" rel="tag"># OpenGL</a>
+          
+            <a href="/tags/图像处理/" rel="tag"># 图像处理</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/17/一种Swift下的不完美AOP方案/" rel="next" title="一种Swift下的不完美AOP方案">
+                <i class="fa fa-chevron-left"></i> 一种Swift下的不完美AOP方案
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/02/细说ptrace反调试/" rel="prev" title="细说ptrace反调试">
+                细说ptrace反调试 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ben Arvin</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v6.6.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.6.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.6.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.6.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.6.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.6.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

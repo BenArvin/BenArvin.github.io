@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.6.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.6.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.6.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '6.6.0',
+    sidebar: {"position":"left","display":"remove","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="在iOS逆向中，很多技术帖都提到，可使用ptrace进行反调试。当然为了防止这种反调试手段被攻破，我们还可以使用其他的变种方案。 1、为什使用ptrace如果不了解ptrace的意思和大致作用，可以参照下面的链接：  Linux Ptrace 详解 ptrace - linux man  或者先不深究，而是简单的，把ptrace理解成用于进程监控和控制的linux方法。也就是说，可以通过ptrac">
+<meta name="keywords" content="iOS,逆向,汇编,加固,安全">
+<meta property="og:type" content="article">
+<meta property="og:title" content="细说ptrace反调试">
+<meta property="og:url" content="https://benarvin.github.io/2019/09/02/细说ptrace反调试/index.html">
+<meta property="og:site_name" content="BenArvin&#39;s blog">
+<meta property="og:description" content="在iOS逆向中，很多技术帖都提到，可使用ptrace进行反调试。当然为了防止这种反调试手段被攻破，我们还可以使用其他的变种方案。 1、为什使用ptrace如果不了解ptrace的意思和大致作用，可以参照下面的链接：  Linux Ptrace 详解 ptrace - linux man  或者先不深究，而是简单的，把ptrace理解成用于进程监控和控制的linux方法。也就是说，可以通过ptrac">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2021-02-19T08:49:21.054Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="细说ptrace反调试">
+<meta name="twitter:description" content="在iOS逆向中，很多技术帖都提到，可使用ptrace进行反调试。当然为了防止这种反调试手段被攻破，我们还可以使用其他的变种方案。 1、为什使用ptrace如果不了解ptrace的意思和大致作用，可以参照下面的链接：  Linux Ptrace 详解 ptrace - linux man  或者先不深究，而是简单的，把ptrace理解成用于进程监控和控制的linux方法。也就是说，可以通过ptrac">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="BenArvin's blog" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="https://benarvin.github.io/2019/09/02/细说ptrace反调试/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>细说ptrace反调试 | BenArvin's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">BenArvin's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">No code, no bug. No deploy, no error.</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://benarvin.github.io/2019/09/02/细说ptrace反调试/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ben Arvin">
+      <meta itemprop="description" content="No code, no bug. No deploy, no error.">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="BenArvin's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">细说ptrace反调试
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-09-02 23:00:00" itemprop="dateCreated datePublished" datetime="2019-09-02T23:00:00+08:00">2019-09-02</time>
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在iOS逆向中，很多技术帖都提到，可使用<code>ptrace</code>进行反调试。当然为了防止这种反调试手段被攻破，我们还可以使用其他的变种方案。</p>
+<h2 id="1、为什使用ptrace"><a href="#1、为什使用ptrace" class="headerlink" title="1、为什使用ptrace"></a>1、为什使用ptrace</h2><p>如果不了解<code>ptrace</code>的意思和大致作用，可以参照下面的链接：</p>
+<ul>
+<li><a href="https://www.cnblogs.com/yibutian/p/9482972.html" target="_blank" rel="noopener">Linux Ptrace 详解</a></li>
+<li><a href="http://man7.org/linux/man-pages/man2/ptrace.2.html" target="_blank" rel="noopener">ptrace - linux man</a></li>
+</ul>
+<p>或者先不深究，而是简单的，把<code>ptrace</code>理解成用于进程监控和控制的linux方法。也就是说，可以通过<code>ptrace</code>，对指定的进程进行监控和控制。比如XCode中的debug功能，就是通过<code>ptrace</code>实现的。</p>
+<p>既然debug功能是通过<code>ptrace</code>实现的，而且反调试的目的就是阻止我们的APP，被破解者在XCode中debug砸壳后的包。那么，我们就可以使用<code>ptrace</code>来反调试。</p>
+<h2 id="2、怎么使用ptrace"><a href="#2、怎么使用ptrace" class="headerlink" title="2、怎么使用ptrace"></a>2、怎么使用ptrace</h2><p>我们先看下<code>ptrace</code>的API定义（可以在<code>sys/ptrace.h</code>里找到）：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int ptrace(int _request, pid_t _pid, caddr_t _addr, int _data);</span><br></pre></td></tr></table></figure></p>
+<p>一共有四个参数：</p>
+<ul>
+<li><code>_request</code>: 表示要执行的操作类型，我们反调试会用到<code>PT_DENY_ATTACH</code>，也就是去除进程依附</li>
+<li><code>_pid</code>: 要操作的目的进程ID，因为我们是反调试，所以就传递0，表示对当前进程进行操作</li>
+<li><code>_addr</code>: 要监控的内存地址，目前用不上所以就传0</li>
+<li><code>_data</code>: 保存读取出或者要写入的数据，也用不上，所以就传0</li>
+</ul>
+<p>所以合到一起以后，就是这样一句简单的代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ptrace(PT_DENY_ATTACH, 0, 0, 0)</span><br></pre></td></tr></table></figure>
+<p>不过需要注意的是，因为这句代码只在调用的时候执行，而不是调用一次就循环检测，所以我们需要在代码中加一个定时器，每隔一段时间就调用一次。</p>
+<p>此外，我们会发现在iOS工程中，没法儿直接引入<code>sys/ptrace.h</code>，这是因为苹果没有对iOS项目公开。不过，我们可以先新建一个macOS下的<code>command Line Tool</code>类型工程，在这个工程中进入到<code>sys/ptrace.h</code>文件里面，然后复制文件内的所有内容，放到iOS工程里我们随便新建的一个<code>.h</code>文件里面，比如<code>my_ptrace.h</code>。这样，我们就可以通过<code>import my_ptrace.h</code>，做到在iOS工程里面调用<code>ptrace</code>了。</p>
+<h2 id="3、变种API方案"><a href="#3、变种API方案" class="headerlink" title="3、变种API方案"></a>3、变种API方案</h2><p>大家都说虽然调用<code>ptrace</code>可以做到反调试，但是这样直白的调用，会很容易通过fishhook攻破，那我们就换种稍微相对安全点的方案来做。</p>
+<p>既然我们知道<code>ptrace</code>的本质，是一种linux的系统调用函数，那么我们是不是可以通过直接调用系统函数的方式，变相的来调用<code>ptrace</code>。</p>
+<p>所以我们来看下系统调用的API：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int syscall(int, ...);</span><br></pre></td></tr></table></figure>
+<p>这是个多参函数，只规定了第一个参数是int类型的，而这第一个参，就是我们所希望执行的系统调用。而后面的参数，就是每个系统调用对应的参数。</p>
+<p>系统调用类型很多，可以参照<code>sys/syscall.h</code>里面的定义，对于我们反调试来说，就是<code>SYS_ptrace</code>。</p>
+<p>所以综合来看，如果使用<code>syscall</code>的方式来调用，就可以这样写：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">syscall(SYS_ptrace, PT_DENY_ATTACH, 0, 0, 0)</span><br></pre></td></tr></table></figure></p>
+<h3 id="4、汇编方案"><a href="#4、汇编方案" class="headerlink" title="4、汇编方案"></a>4、汇编方案</h3><p>虽然使用<code>syscall</code>的方案稍微相对安全一点，但说到底都是API调用，仍然无法避免被fishhook攻破。所以我们就一步到底，直接用内联汇编的方式来做。也就是下面这段：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">static __attribute__((always_inline)) void asm_ptrace() &#123;</span><br><span class="line">#ifdef __arm64__</span><br><span class="line">    __asm__(&quot;mov X0, #31\n&quot;</span><br><span class="line">            &quot;mov X1, #0\n&quot;</span><br><span class="line">            &quot;mov X2, #0\n&quot;</span><br><span class="line">            &quot;mov X3, #0\n&quot;</span><br><span class="line">            &quot;mov X16, #26\n&quot;</span><br><span class="line">            &quot;svc #0x80\n&quot;</span><br><span class="line">            );</span><br><span class="line">#endif</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在对代逐行分析之前，我们先对这段代码有个大体的了解。首先，这段汇编代码，就是<code>ptrace</code>调用的汇编写法。其次，<code>X0</code>、<code>X1</code>、<code>X2</code>、<code>X3</code>寄存器，存贮着我们调用<code>ptrace</code>的传参。</p>
+<p>然后，我们来逐行分析，先解释汇编以外的代码。第一行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">static __attribute__((always_inline)) void asm_ptrace() &#123;</span><br></pre></td></tr></table></figure></p>
+<p>这行的作用，是定义了一个C方法<code>asm_ptrace</code>，同时设置为内联函数，也就是inline。为什么要设置成<code>always_inline</code>呢？是因为只要设置成了内联函数，那么在编译阶段，就会把这段代码复制到各个调用位置，最终编译的结果里面，我们调用了几次，这段代码就会出现几次，揉杂在其他汇编里，分散在各处加大了攻破的难度。</p>
+<p>下一句：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#ifdef __arm64__</span><br></pre></td></tr></table></figure></p>
+<p>显而易见，用于判断当前的CPU架构是不是arm64的。</p>
+<p>然后是汇编部分的代码，在解释这部分之前，先回顾一下汇编的知识。</p>
+<p>arm64架构下，一共有<code>X0</code> - <code>X30</code>，总计31个通用寄存器，和<code>SP</code>、<code>PC</code>、<code>CPSR</code>等特殊寄存器。我们只着重介绍在本文里会用到的寄存器，其他寄存器的用处，可参照文末的参考资料。</p>
+<ul>
+<li><code>X0</code> - <code>X7</code>：这8个寄存器，用来存储函数调用时的传参</li>
+<li><code>X16(IP0)</code>：程序内函数间调用临时寄存器</li>
+</ul>
+<p>然后是汇编指令，同样的，我们只关注本文中会用到的指令。</p>
+<ul>
+<li><code>MOV</code>：寄存器值传递，比如<code>MOV X0, X1</code>的意思，就是把寄存器<code>X1</code>里的值，传递到<code>X0</code>里</li>
+<li><code>SVC</code>：进入异常同步，即使CPU跳转到同步异常的入口地址，并从这个地址陷入到内核态里</li>
+</ul>
+<p>然后我们再回过头大致分析下那段汇编代码：</p>
+<ol>
+<li><code>mov X0, #31</code>：为<code>X0</code>寄存器赋值31</li>
+<li><code>mov X1, #0</code>：为<code>X1</code>寄存器赋值0</li>
+<li><code>mov X2, #0</code>：为<code>X2</code>寄存器赋值0</li>
+<li><code>mov X3, #0</code>：为<code>X3</code>寄存器赋值0</li>
+<li><code>mov X16, #26</code>：为<code>X16</code>寄存器赋值26？</li>
+<li><code>svc #0x80</code>：进入内核态？</li>
+</ol>
+<p>我们可以模模糊糊的对应上，前两节里我们写的高级代码<code>syscall</code>。</p>
+<p>第1～4行，表示存储用于<code>ptrace</code>系统调用需要用到的传参。</p>
+<p>但是，对于第5、第6行我们还是存在疑问，为什么要这样写？因为这种写法是来源于linux系统。</p>
+<p>在linux系统里，提供了通过<code>int 0x80</code>方式调用系统调用的方法。同时使用系统调用号，来区分入口函数。也就是说，想要在linux系统中调用指定的系统调用，就得先指定系统调用号，然后执行<code>int 0x80</code>，就像下面这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">mov eax, 3 //指定系统调用号</span><br><span class="line">mov ebx, fd</span><br><span class="line">mov ecx, buffer</span><br><span class="line">mov edx, nbytes</span><br><span class="line">int 0x80</span><br></pre></td></tr></table></figure>
+<p>而在arm64架构里，<code>int 0x80</code>对应的就是<code>SVC #0x80</code>，<code>mov eax, 3</code>对应的就是<code>mov X16, #26</code>。</p>
+<p>到此为止，我们已经基本上明白了这段汇编代码。但是想要更深入的理解，比如<code>SVC</code>指令和<code>int</code>指令的异同，<code>X16</code>寄存器的更详细解释，还是得继续深入的学一下arm64。所以，这部分内容就留到以后学完了再聊吧。</p>
+<h3 id="5、拓展一下"><a href="#5、拓展一下" class="headerlink" title="5、拓展一下"></a>5、拓展一下</h3><p>那这种使用内联汇编的方式，是不是一定安全的呢？当然不是，我们还是可以通过IDA定位<code>SVC</code>语句，然后再直接修改汇编代码的方式来攻破。</p>
+<p>此外，如果我们还想调用其他系统调用怎么办呢？比如说<code>exit</code>。那我们就可以用类似的方式来做：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mov X0, #0</span><br><span class="line">mov X16, #1</span><br><span class="line">svc #0x80</span><br></pre></td></tr></table></figure></p>
+<h3 id="6、参考资料"><a href="#6、参考资料" class="headerlink" title="6、参考资料"></a>6、参考资料</h3><p><a href="https://blog.csdn.net/liuhangtiant/article/details/85149369" target="_blank" rel="noopener">Linux+ARM64 系统调用</a><br><a href="https://blog.csdn.net/hq815601489/article/details/80009791" target="_blank" rel="noopener">Linux系统调用：使用int 0x80</a><br><a href="https://blog.csdn.net/youngyoungla/article/details/53106671" target="_blank" rel="noopener">用户态和内核态的区别</a><br><a href="https://www.jianshu.com/p/2f4a5f74ac7a" target="_blank" rel="noopener">ARM64 汇编——寄存器和指令</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+       
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+            <a href="/tags/逆向/" rel="tag"># 逆向</a>
+          
+            <a href="/tags/汇编/" rel="tag"># 汇编</a>
+          
+            <a href="/tags/加固/" rel="tag"># 加固</a>
+          
+            <a href="/tags/安全/" rel="tag"># 安全</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/24/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/" rel="next" title="图像显示、OpenGL、离屏渲染、滤镜等等的一些小事">
+                <i class="fa fa-chevron-left"></i> 图像显示、OpenGL、离屏渲染、滤镜等等的一些小事
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/20/iOS反逆向方案建设思路/" rel="prev" title="iOS反逆向方案建设思路">
+                iOS反逆向方案建设思路 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ben Arvin</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v6.6.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.6.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.6.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.6.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.6.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.6.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

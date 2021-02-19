@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.6.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.6.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.6.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '6.6.0',
+    sidebar: {"position":"left","display":"remove","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="因为Swift缺少动态性的问题，导致没办法像OC一样，通过runtime去实现AOP。虽然依旧可以通过在Swift代码中，添加@objc声明使之动态化的方式。但是这种做法，毕竟还是不Swift的。那么有没有办法，在不使用私有API的前提下实现AOP呢？ 这里有个不完美的方案，即通过类的继承、引用和别名机制，来实现有条件的、受限的不完美AOP。 1、实现代码原理很简单，所以我们就不介绍了，直接看代码">
+<meta name="keywords" content="iOS,Swift,AOP,hook">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一种Swift下的不完美AOP方案">
+<meta property="og:url" content="https://benarvin.github.io/2019/07/17/一种Swift下的不完美AOP方案/index.html">
+<meta property="og:site_name" content="BenArvin&#39;s blog">
+<meta property="og:description" content="因为Swift缺少动态性的问题，导致没办法像OC一样，通过runtime去实现AOP。虽然依旧可以通过在Swift代码中，添加@objc声明使之动态化的方式。但是这种做法，毕竟还是不Swift的。那么有没有办法，在不使用私有API的前提下实现AOP呢？ 这里有个不完美的方案，即通过类的继承、引用和别名机制，来实现有条件的、受限的不完美AOP。 1、实现代码原理很简单，所以我们就不介绍了，直接看代码">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2021-02-19T08:49:21.054Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一种Swift下的不完美AOP方案">
+<meta name="twitter:description" content="因为Swift缺少动态性的问题，导致没办法像OC一样，通过runtime去实现AOP。虽然依旧可以通过在Swift代码中，添加@objc声明使之动态化的方式。但是这种做法，毕竟还是不Swift的。那么有没有办法，在不使用私有API的前提下实现AOP呢？ 这里有个不完美的方案，即通过类的继承、引用和别名机制，来实现有条件的、受限的不完美AOP。 1、实现代码原理很简单，所以我们就不介绍了，直接看代码">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="BenArvin's blog" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="https://benarvin.github.io/2019/07/17/一种Swift下的不完美AOP方案/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>一种Swift下的不完美AOP方案 | BenArvin's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">BenArvin's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">No code, no bug. No deploy, no error.</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://benarvin.github.io/2019/07/17/一种Swift下的不完美AOP方案/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ben Arvin">
+      <meta itemprop="description" content="No code, no bug. No deploy, no error.">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="BenArvin's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">一种Swift下的不完美AOP方案
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-07-17 23:00:00" itemprop="dateCreated datePublished" datetime="2019-07-17T23:00:00+08:00">2019-07-17</time>
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>因为Swift缺少动态性的问题，导致没办法像OC一样，通过runtime去实现AOP。虽然依旧可以通过在Swift代码中，添加<code>@objc</code>声明使之动态化的方式。但是这种做法，毕竟还是不Swift的。那么有没有办法，在不使用私有API的前提下实现AOP呢？</p>
+<p>这里有个不完美的方案，即通过类的继承、引用和别名机制，来实现有条件的、受限的不完美AOP。</p>
+<h2 id="1、实现代码"><a href="#1、实现代码" class="headerlink" title="1、实现代码"></a>1、实现代码</h2><p>原理很简单，所以我们就不介绍了，直接看代码。</p>
+<p>先设定一个目标，即想要hook一个系统API，比如<code>UIView</code>的<code>layoutSubviews</code>方法。</p>
+<h3 id="1-1、第一步"><a href="#1-1、第一步" class="headerlink" title="1.1、第一步"></a>1.1、第一步</h3><p>先建立一个名叫<code>HookedUIKit</code>的framework工程，并在工程里面新增一个名叫<code>HookedUIView</code>的Swift类，类里面的代码这样写：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">import UIKit</span><br><span class="line">public class HookedUIView: UIView &#123;</span><br><span class="line">    override public func layoutSubviews() &#123;</span><br><span class="line">        super.layoutSubviews()</span><br><span class="line">        //设置宽度为1.0的红色边框</span><br><span class="line">        self.layer.borderColor = UIColor.red.cgColor</span><br><span class="line">        self.layer.borderWidth = 1.0</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>紧接着编译生成<code>HookedUIKit.framework</code>库文件</p>
+<h3 id="1-2、第二步"><a href="#1-2、第二步" class="headerlink" title="1.2、第二步"></a>1.2、第二步</h3><p>接下来创建一个名叫<code>SwiftAOPTest</code>的Swift工程，并引入上一步中我们制作好的<code>HookedUIKit.framework</code>库文件。</p>
+<p>然后，在<code>SwiftAOPTest</code>工程里面，随便挑一个ViewController的代码文件，比如<code>MainViewController.swift</code>。并在文件顶部加上这两句：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">import HookedUIKit</span><br><span class="line">typealias UIView = HookedUIView</span><br></pre></td></tr></table></figure>
+<p>这一步结束之后，我们就做到了对<code>UIView</code>类里面<code>layoutSubviews</code>方法的hook，虽然有点怪怪的</p>
+<h3 id="1-3、验证"><a href="#1-3、验证" class="headerlink" title="1.3、验证"></a>1.3、验证</h3><p>为了验证这个方案是不是有效，我们可以在<code>MainViewController.swift</code>文件里，随便新建并显示一个view，比如下面这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">let tmpView = UIView.init(frame: CGRect.init(x: 50, y: 50, width: 50, height: 50))</span><br><span class="line">tmpView.backgroundColor = UIColor.gray</span><br><span class="line">self.view.addSubview(tmpView)</span><br></pre></td></tr></table></figure>
+<p>运行起来以后，我们就能看到这个view被加上了红色的边框</p>
+<h2 id="2、存在的问题"><a href="#2、存在的问题" class="headerlink" title="2、存在的问题"></a>2、存在的问题</h2><p>上面这种实现AOP的方式，其实是利用了对framework文件的引用，是单向性的特点。所以这种方案，也就脱离不了对这种单向引用特性的依赖。拓展来看的话，在下面这些场景里，刚才提到的方案都是无效的，或者需要增加很繁琐的特殊处理：</p>
+<ul>
+<li>hook framework库里面的类：可以尝试对需要引入的framework，再包一层framework</li>
+<li>hook本工程内其他同级类：比如工程里我们新增了个<code>DataManager</code>的业务类，而因为目前还没找到本工程内，对同级类的引用关系做单向限制的方法，所以这个方案也就是无效的</li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+       
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+            <a href="/tags/Swift/" rel="tag"># Swift</a>
+          
+            <a href="/tags/AOP/" rel="tag"># AOP</a>
+          
+            <a href="/tags/hook/" rel="tag"># hook</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/29/iOS逆向学习（三）砸壳原理之frida-ios-dump/" rel="next" title="iOS逆向学习（三）砸壳原理之frida-ios-dump">
+                <i class="fa fa-chevron-left"></i> iOS逆向学习（三）砸壳原理之frida-ios-dump
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/24/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/" rel="prev" title="图像显示、OpenGL、离屏渲染、滤镜等等的一些小事">
+                图像显示、OpenGL、离屏渲染、滤镜等等的一些小事 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ben Arvin</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v6.6.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.6.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.6.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.6.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.6.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.6.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

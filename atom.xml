@@ -1,0 +1,582 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>BenArvin&#39;s blog</title>
+  
+  <subtitle>No code, no bug. No deploy, no error.</subtitle>
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="https://benarvin.github.io/"/>
+  <updated>2021-02-19T08:49:21.054Z</updated>
+  <id>https://benarvin.github.io/</id>
+  
+  <author>
+    <name>Ben Arvin</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Xcode垃圾清理</title>
+    <link href="https://benarvin.github.io/2020/01/13/Xcode%E5%9E%83%E5%9C%BE%E6%B8%85%E7%90%86/"/>
+    <id>https://benarvin.github.io/2020/01/13/Xcode垃圾清理/</id>
+    <published>2020-01-13T04:00:00.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;对于我这种买不起顶配mac电脑的穷人来说，Xcode动辄几十GB的磁盘占用简直令人发指。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/Xcode垃圾清理/img1.JPG&quot;
+        
+      
+    
+    </summary>
+    
+    
+      <category term="工具" scheme="https://benarvin.github.io/tags/%E5%B7%A5%E5%85%B7/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>iOS反逆向方案建设思路</title>
+    <link href="https://benarvin.github.io/2019/09/20/iOS%E5%8F%8D%E9%80%86%E5%90%91%E6%96%B9%E6%A1%88%E5%BB%BA%E8%AE%BE%E6%80%9D%E8%B7%AF/"/>
+    <id>https://benarvin.github.io/2019/09/20/iOS反逆向方案建设思路/</id>
+    <published>2019-09-20T15:00:00.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;地球人都知道，iOS不是安全的，iOS APP更不是安全的。那如果想要提升APP的安全性，就得在网络、数据存储等方面进行建设。而对于iOS APP来说，最常见的安全能力，就是反逆向的能力。&lt;/p&gt;
+&lt;p&gt;我们先看下逆向的大致步骤，我们之前也在这篇帖子（&lt;a
+        
+      
+    
+    </summary>
+    
+    
+      <category term="iOS" scheme="https://benarvin.github.io/tags/iOS/"/>
+    
+      <category term="逆向" scheme="https://benarvin.github.io/tags/%E9%80%86%E5%90%91/"/>
+    
+      <category term="加固" scheme="https://benarvin.github.io/tags/%E5%8A%A0%E5%9B%BA/"/>
+    
+      <category term="安全" scheme="https://benarvin.github.io/tags/%E5%AE%89%E5%85%A8/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>细说ptrace反调试</title>
+    <link href="https://benarvin.github.io/2019/09/02/%E7%BB%86%E8%AF%B4ptrace%E5%8F%8D%E8%B0%83%E8%AF%95/"/>
+    <id>https://benarvin.github.io/2019/09/02/细说ptrace反调试/</id>
+    <published>2019-09-02T15:00:00.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;在iOS逆向中，很多技术帖都提到，可使用&lt;code&gt;ptrace&lt;/code&gt;进行反调试。当然为了防止这种反调试手段被攻破，我们还可以使用其他的变种方案。&lt;/p&gt;
+&lt;h2 id=&quot;1、为什使用ptrace&quot;&gt;&lt;a href=&quot;#1、为什使用ptrace&quot;
+        
+      
+    
+    </summary>
+    
+    
+      <category term="iOS" scheme="https://benarvin.github.io/tags/iOS/"/>
+    
+      <category term="逆向" scheme="https://benarvin.github.io/tags/%E9%80%86%E5%90%91/"/>
+    
+      <category term="汇编" scheme="https://benarvin.github.io/tags/%E6%B1%87%E7%BC%96/"/>
+    
+      <category term="加固" scheme="https://benarvin.github.io/tags/%E5%8A%A0%E5%9B%BA/"/>
+    
+      <category term="安全" scheme="https://benarvin.github.io/tags/%E5%AE%89%E5%85%A8/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>图像显示、OpenGL、离屏渲染、滤镜等等的一些小事</title>
+    <link href="https://benarvin.github.io/2019/08/24/%E5%9B%BE%E5%83%8F%E6%98%BE%E7%A4%BA%E3%80%81OpenGL%E3%80%81%E7%A6%BB%E5%B1%8F%E6%B8%B2%E6%9F%93%E3%80%81%E6%BB%A4%E9%95%9C%E7%AD%89%E7%AD%89%E7%9A%84%E4%B8%80%E4%BA%9B%E5%B0%8F%E4%BA%8B/"/>
+    <id>https://benarvin.github.io/2019/08/24/图像显示、OpenGL、离屏渲染、滤镜等等的一些小事/</id>
+    <published>2019-08-24T14:00:00.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;因为本文的意图，是把一系列的知识点串联起来，而不是逐个的深入分析，所以将会比较笼统。想要了解更多的细节，你可以参照文末的参考资料，或者自己搜索下各个知识点。当然，以后我也会不定期的针对某些点研究后再发文介绍。那么我们就开始吧。&lt;/p&gt;
+&lt;p&gt;先从第一步，也就是显示一张图片说
+        
+      
+    
+    </summary>
+    
+    
+      <category term="iOS" scheme="https://benarvin.github.io/tags/iOS/"/>
+    
+      <category term="性能" scheme="https://benarvin.github.io/tags/%E6%80%A7%E8%83%BD/"/>
+    
+      <category term="OpenGL" scheme="https://benarvin.github.io/tags/OpenGL/"/>
+    
+      <category term="图像处理" scheme="https://benarvin.github.io/tags/%E5%9B%BE%E5%83%8F%E5%A4%84%E7%90%86/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>一种Swift下的不完美AOP方案</title>
+    <link href="https://benarvin.github.io/2019/07/17/%E4%B8%80%E7%A7%8DSwift%E4%B8%8B%E7%9A%84%E4%B8%8D%E5%AE%8C%E7%BE%8EAOP%E6%96%B9%E6%A1%88/"/>
+    <id>https://benarvin.github.io/2019/07/17/一种Swift下的不完美AOP方案/</id>
+    <published>2019-07-17T15:00:00.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;因为Swift缺少动态性的问题，导致没办法像OC一样，通过runtime去实现AOP。虽然依旧可以通过在Swift代码中，添加&lt;code&gt;@objc&lt;/code&gt;声明使之动态化的方式。但是这种做法，毕竟还是不Swift的。那么有没有办法，在不使用私有API的前提下实现AOP
+        
+      
+    
+    </summary>
+    
+    
+      <category term="iOS" scheme="https://benarvin.github.io/tags/iOS/"/>
+    
+      <category term="Swift" scheme="https://benarvin.github.io/tags/Swift/"/>
+    
+      <category term="AOP" scheme="https://benarvin.github.io/tags/AOP/"/>
+    
+      <category term="hook" scheme="https://benarvin.github.io/tags/hook/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>iOS逆向学习（三）砸壳原理之frida-ios-dump</title>
+    <link href="https://benarvin.github.io/2019/06/29/iOS%E9%80%86%E5%90%91%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%B8%89%EF%BC%89%E7%A0%B8%E5%A3%B3%E5%8E%9F%E7%90%86%E4%B9%8Bfrida-ios-dump/"/>
+    <id>https://benarvin.github.io/2019/06/29/iOS逆向学习（三）砸壳原理之frida-ios-dump/</id>
+    <published>2019-06-29T15:00:00.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;&lt;a href=&quot;https://github.com/AloneMonkey/frida-ios-dump&quot; target=&quot;_blank&quot;
+        
+      
+    
+    </summary>
+    
+    
+      <category term="iOS" scheme="https://benarvin.github.io/tags/iOS/"/>
+    
+      <category term="逆向" scheme="https://benarvin.github.io/tags/%E9%80%86%E5%90%91/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>iOS逆向学习（二）砸壳原理之dumpdecrypted</title>
+    <link href="https://benarvin.github.io/2019/06/20/iOS%E9%80%86%E5%90%91%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8C%EF%BC%89%E7%A0%B8%E5%A3%B3%E5%8E%9F%E7%90%86%E4%B9%8Bdumpdecrypted/"/>
+    <id>https://benarvin.github.io/2019/06/20/iOS逆向学习（二）砸壳原理之dumpdecrypted/</id>
+    <published>2019-06-20T15:00:00.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;h2 id=&quot;1、基本原理&quot;&gt;&lt;a href=&quot;#1、基本原理&quot; class=&quot;headerlink&quot;
+        
+      
+    
+    </summary>
+    
+    
+      <category term="iOS" scheme="https://benarvin.github.io/tags/iOS/"/>
+    
+      <category term="逆向" scheme="https://benarvin.github.io/tags/%E9%80%86%E5%90%91/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>iOS逆向学习（一）基础</title>
+    <link href="https://benarvin.github.io/2019/05/27/iOS%E9%80%86%E5%90%91%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%B8%80%EF%BC%89%E5%9F%BA%E7%A1%80/"/>
+    <id>https://benarvin.github.io/2019/05/27/iOS逆向学习（一）基础/</id>
+    <published>2019-05-27T15:00:00.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;因为工作原因，最近开始接触iOS逆向这块，所以在这里记录、总结一下。这一篇主要是基本知识、常用工具。&lt;/p&gt;
+&lt;h1 id=&quot;一、基本知识&quot;&gt;&lt;a href=&quot;#一、基本知识&quot; class=&quot;headerlink&quot;
+        
+      
+    
+    </summary>
+    
+    
+      <category term="iOS" scheme="https://benarvin.github.io/tags/iOS/"/>
+    
+      <category term="逆向" scheme="https://benarvin.github.io/tags/%E9%80%86%E5%90%91/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>算法学习之AVL树</title>
+    <link href="https://benarvin.github.io/2019/02/19/%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0%E4%B9%8BAVL%E6%A0%91/"/>
+    <id>https://benarvin.github.io/2019/02/19/算法学习之AVL树/</id>
+    <published>2019-02-19T14:00:00.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;AVL树(Adelson-Velsky and Landis Tree)，是一种自平衡二叉查找树。网上的介绍比较多，这里仅作为学习记录。&lt;/p&gt;
+&lt;p&gt;老规矩，代码实现直接跳转至最后一章。&lt;/p&gt;
+&lt;h1 id=&quot;1-二叉查找树&quot;&gt;&lt;a href=&quot;#1-二叉查找树&quot;
+        
+      
+    
+    </summary>
+    
+    
+      <category term="算法" scheme="https://benarvin.github.io/tags/%E7%AE%97%E6%B3%95/"/>
+    
+      <category term="Python" scheme="https://benarvin.github.io/tags/Python/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>算法学习之SBOM</title>
+    <link href="https://benarvin.github.io/2018/12/28/%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0%E4%B9%8BSBOM/"/>
+    <id>https://benarvin.github.io/2018/12/28/算法学习之SBOM/</id>
+    <published>2018-12-28T14:00:00.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;SBOM算法的全称是Set Backward Oracle Matching，是一种基于子串的，使用了Factor
+        
+      
+    
+    </summary>
+    
+    
+      <category term="算法" scheme="https://benarvin.github.io/tags/%E7%AE%97%E6%B3%95/"/>
+    
+      <category term="Python" scheme="https://benarvin.github.io/tags/Python/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>算法学习之Horspool</title>
+    <link href="https://benarvin.github.io/2018/12/27/%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0%E4%B9%8BHorspool/"/>
+    <id>https://benarvin.github.io/2018/12/27/算法学习之Horspool/</id>
+    <published>2018-12-27T14:00:00.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;Horspool算法是&lt;a href=&quot;https://benarvintec.com/2018/12/24/算法学习之Boyer-Moore/&quot; target=&quot;_blank&quot;
+        
+      
+    
+    </summary>
+    
+    
+      <category term="算法" scheme="https://benarvin.github.io/tags/%E7%AE%97%E6%B3%95/"/>
+    
+      <category term="Python" scheme="https://benarvin.github.io/tags/Python/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>算法学习之Boyer-Moore</title>
+    <link href="https://benarvin.github.io/2018/12/24/%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0%E4%B9%8BBoyer-Moore/"/>
+    <id>https://benarvin.github.io/2018/12/24/算法学习之Boyer-Moore/</id>
+    <published>2018-12-24T14:00:00.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;Boyer-Moore算法网上的介绍比较多、比较详细，所以这里仅作为简单记录。该算法是基于后缀的字符串匹配算法，相较于KMP算法等基于前缀的算法来说，理论上效率是更高的。但实际上因为其匹配方式，主要是通过坏字符表、好后缀表进行跳转的，而对于很长的，或者缺少回文形式内容的模式
+        
+      
+    
+    </summary>
+    
+    
+      <category term="算法" scheme="https://benarvin.github.io/tags/%E7%AE%97%E6%B3%95/"/>
+    
+      <category term="Python" scheme="https://benarvin.github.io/tags/Python/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>算法学习之KMP</title>
+    <link href="https://benarvin.github.io/2018/12/18/%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0%E4%B9%8BKMP/"/>
+    <id>https://benarvin.github.io/2018/12/18/算法学习之KMP/</id>
+    <published>2018-12-18T14:34:40.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;KMP算法的全称叫Knuth-Morris-Pratt算法，是一种比较常见的，基于前缀的，单字符串匹配算法。&lt;/p&gt;
+&lt;p&gt;对于这种算法，网上的各种解释介绍也很多，大多是从部分匹配表出发，来说明算法的构造使用方式，以及运行过程。所以咱们这一篇就不再重复介绍这部分了，而是从自
+        
+      
+    
+    </summary>
+    
+    
+      <category term="算法" scheme="https://benarvin.github.io/tags/%E7%AE%97%E6%B3%95/"/>
+    
+      <category term="Python" scheme="https://benarvin.github.io/tags/Python/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>算法学习之Aho-Corasick</title>
+    <link href="https://benarvin.github.io/2018/11/26/%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0%E4%B9%8BAho-Corasick/"/>
+    <id>https://benarvin.github.io/2018/11/26/算法学习之Aho-Corasick/</id>
+    <published>2018-11-26T12:39:30.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;因为目前网上各处对于Aho-Corasick算法，在关键点上的解释都太简单随便，实在不如我意，所以在此用自己的语言记录一遍。&lt;/p&gt;
+&lt;p&gt;PS: 如果已经理解了该算法原理，或想要先拿到代码实现的话，请直接跳转至最后一节。&lt;/p&gt;
+&lt;h1
+        
+      
+    
+    </summary>
+    
+    
+      <category term="算法" scheme="https://benarvin.github.io/tags/%E7%AE%97%E6%B3%95/"/>
+    
+      <category term="Python" scheme="https://benarvin.github.io/tags/Python/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>iOS硬编码混淆</title>
+    <link href="https://benarvin.github.io/2018/11/26/iOS%E7%A1%AC%E7%BC%96%E7%A0%81%E6%B7%B7%E6%B7%86/"/>
+    <id>https://benarvin.github.io/2018/11/26/iOS硬编码混淆/</id>
+    <published>2018-11-26T11:11:32.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;在做iOS马甲包，或者加固的时候，我们需要进行代码混淆。目前比较成熟方便的解决方案，大多是采用&lt;a href=&quot;https://blog.csdn.net/yiyaaixuexi/article/details/29201699&quot; target=&quot;_blank&quot;
+        
+      
+    
+    </summary>
+    
+    
+      <category term="iOS" scheme="https://benarvin.github.io/tags/iOS/"/>
+    
+      <category term="算法" scheme="https://benarvin.github.io/tags/%E7%AE%97%E6%B3%95/"/>
+    
+      <category term="Python" scheme="https://benarvin.github.io/tags/Python/"/>
+    
+      <category term="加固" scheme="https://benarvin.github.io/tags/%E5%8A%A0%E5%9B%BA/"/>
+    
+      <category term="安全" scheme="https://benarvin.github.io/tags/%E5%AE%89%E5%85%A8/"/>
+    
+      <category term="混淆" scheme="https://benarvin.github.io/tags/%E6%B7%B7%E6%B7%86/"/>
+    
+      <category term="Clang" scheme="https://benarvin.github.io/tags/Clang/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>iOS分片下载器(一)</title>
+    <link href="https://benarvin.github.io/2018/10/10/iOS%E5%88%86%E7%89%87%E4%B8%8B%E8%BD%BD%E5%99%A8%EF%BC%88%E4%B8%80%EF%BC%89/"/>
+    <id>https://benarvin.github.io/2018/10/10/iOS分片下载器（一）/</id>
+    <published>2018-10-10T04:00:00.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;因为目前项目里的HTTP下载器太过简陋，所以想要封装固化一个稍微设计、性能好些的自用，然后就想不如干脆一步到位，整个支持断点续传、支持分片下载的下载器得了。&lt;/p&gt;
+&lt;p&gt;而至于什么是断点续传，什么是分片下载，举两个例子：&lt;/p&gt;
+&lt;p&gt;当你下载一个100MB大小的文件时，
+        
+      
+    
+    </summary>
+    
+    
+      <category term="iOS" scheme="https://benarvin.github.io/tags/iOS/"/>
+    
+      <category term="设计" scheme="https://benarvin.github.io/tags/%E8%AE%BE%E8%AE%A1/"/>
+    
+      <category term="线程" scheme="https://benarvin.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
+    
+      <category term="HTTP" scheme="https://benarvin.github.io/tags/HTTP/"/>
+    
+      <category term="文件下载" scheme="https://benarvin.github.io/tags/%E6%96%87%E4%BB%B6%E4%B8%8B%E8%BD%BD/"/>
+    
+      <category term="性能" scheme="https://benarvin.github.io/tags/%E6%80%A7%E8%83%BD/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>代码设计二三事（一）</title>
+    <link href="https://benarvin.github.io/2018/06/01/%E4%BB%A3%E7%A0%81%E8%AE%BE%E8%AE%A1%E4%BA%8C%E4%B8%89%E4%BA%8B%EF%BC%88%E4%B8%80%EF%BC%89/"/>
+    <id>https://benarvin.github.io/2018/06/01/代码设计二三事（一）/</id>
+    <published>2018-06-01T12:39:30.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;对于代码设计，我们是有着一些规律、原则、方案去遵循的，比如大家常说的MVC、MVP、MVVM之类的架构，以及观察者模式、单例模式、装饰模式等等的经典设计模式。&lt;/p&gt;
+&lt;p&gt;但到了实际项目里，该选用哪种架构、哪种设计模式，如何去设计自己的代码，说到底还是比较感性的。我们还是
+        
+      
+    
+    </summary>
+    
+    
+      <category term="设计" scheme="https://benarvin.github.io/tags/%E8%AE%BE%E8%AE%A1/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Jest测试框架使用记录（三）</title>
+    <link href="https://benarvin.github.io/2018/04/23/Jest%E6%B5%8B%E8%AF%95%E6%A1%86%E6%9E%B6%E4%BD%BF%E7%94%A8%E8%AE%B0%E5%BD%95%EF%BC%88%E4%B8%89%EF%BC%89/"/>
+    <id>https://benarvin.github.io/2018/04/23/Jest测试框架使用记录（三）/</id>
+    <published>2018-04-23T02:32:32.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;紧接着上一篇，这次介绍的是Enzyme库。Enzyme是airbnb公司开源的测试工具库，可以和mocha、jest、karma等许多测试框架搭配使用，不过在这里，我们还是和jest框架搭配。具体的安装配置，可以参照&lt;a
+        
+      
+    
+    </summary>
+    
+    
+      <category term="React Native" scheme="https://benarvin.github.io/tags/React-Native/"/>
+    
+      <category term="Jest" scheme="https://benarvin.github.io/tags/Jest/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Jest测试框架使用记录（二）</title>
+    <link href="https://benarvin.github.io/2018/03/05/Jest%E6%B5%8B%E8%AF%95%E6%A1%86%E6%9E%B6%E4%BD%BF%E7%94%A8%E8%AE%B0%E5%BD%95%EF%BC%88%E4%BA%8C%EF%BC%89/"/>
+    <id>https://benarvin.github.io/2018/03/05/Jest测试框架使用记录（二）/</id>
+    <published>2018-03-05T03:58:17.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;h1 id=&quot;1、覆盖率&quot;&gt;&lt;a href=&quot;#1、覆盖率&quot; class=&quot;headerlink&quot; title=&quot;1、覆盖率&quot;&gt;&lt;/a&gt;1、覆盖率&lt;/h1&gt;&lt;p&gt;运行&lt;code&gt;jest
+        
+      
+    
+    </summary>
+    
+    
+      <category term="React Native" scheme="https://benarvin.github.io/tags/React-Native/"/>
+    
+      <category term="Jest" scheme="https://benarvin.github.io/tags/Jest/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>更好地封装React Native组件（一）</title>
+    <link href="https://benarvin.github.io/2018/02/27/%E6%9B%B4%E5%A5%BD%E5%9C%B0%E5%B0%81%E8%A3%85React-Native%E7%BB%84%E4%BB%B6%EF%BC%88%E4%B8%80%EF%BC%89/"/>
+    <id>https://benarvin.github.io/2018/02/27/更好地封装React-Native组件（一）/</id>
+    <published>2018-02-27T09:32:42.000Z</published>
+    <updated>2021-02-19T08:49:21.054Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;因为项目需要，前端时间封装了一个纯React Native端的，类似于iOS下UIActionSheet样式的，底部菜单弹窗组件&lt;a href=&quot;https://github.com/BenArvin/BAActionSheet&quot; target=&quot;_blank&quot;
+        
+      
+    
+    </summary>
+    
+    
+      <category term="React Native" scheme="https://benarvin.github.io/tags/React-Native/"/>
+    
+  </entry>
+  
+</feed>

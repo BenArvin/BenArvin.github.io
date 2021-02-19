@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.6.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.6.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.6.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '6.6.0',
+    sidebar: {"position":"left","display":"remove","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="在做iOS马甲包，或者加固的时候，我们需要进行代码混淆。目前比较成熟方便的解决方案，大多是采用念茜大神博客里介绍的#define方式来做。 当然了，博客里给出的方案实现比较简陋，需要手动提取想要混淆的类及方法名。而且似乎因为版本更新等原因，这个比较旧的脚本现在也不能直接拿来用了，所以最好还是当作原理学习的样板吧。不过要是想找个立取可用的工具，可以用stevchen大神的开源工具STCObfusca">
+<meta name="keywords" content="iOS,算法,Python,加固,安全,混淆,Clang">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS硬编码混淆">
+<meta property="og:url" content="https://benarvin.github.io/2018/11/26/iOS硬编码混淆/index.html">
+<meta property="og:site_name" content="BenArvin&#39;s blog">
+<meta property="og:description" content="在做iOS马甲包，或者加固的时候，我们需要进行代码混淆。目前比较成熟方便的解决方案，大多是采用念茜大神博客里介绍的#define方式来做。 当然了，博客里给出的方案实现比较简陋，需要手动提取想要混淆的类及方法名。而且似乎因为版本更新等原因，这个比较旧的脚本现在也不能直接拿来用了，所以最好还是当作原理学习的样板吧。不过要是想找个立取可用的工具，可以用stevchen大神的开源工具STCObfusca">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2021-02-19T08:49:21.054Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="iOS硬编码混淆">
+<meta name="twitter:description" content="在做iOS马甲包，或者加固的时候，我们需要进行代码混淆。目前比较成熟方便的解决方案，大多是采用念茜大神博客里介绍的#define方式来做。 当然了，博客里给出的方案实现比较简陋，需要手动提取想要混淆的类及方法名。而且似乎因为版本更新等原因，这个比较旧的脚本现在也不能直接拿来用了，所以最好还是当作原理学习的样板吧。不过要是想找个立取可用的工具，可以用stevchen大神的开源工具STCObfusca">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="BenArvin's blog" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="https://benarvin.github.io/2018/11/26/iOS硬编码混淆/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>iOS硬编码混淆 | BenArvin's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">BenArvin's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">No code, no bug. No deploy, no error.</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://benarvin.github.io/2018/11/26/iOS硬编码混淆/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ben Arvin">
+      <meta itemprop="description" content="No code, no bug. No deploy, no error.">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="BenArvin's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">iOS硬编码混淆
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-11-26 19:11:32" itemprop="dateCreated datePublished" datetime="2018-11-26T19:11:32+08:00">2018-11-26</time>
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在做iOS马甲包，或者加固的时候，我们需要进行代码混淆。目前比较成熟方便的解决方案，大多是采用<a href="https://blog.csdn.net/yiyaaixuexi/article/details/29201699" target="_blank" rel="noopener">念茜大神博客</a>里介绍的<code>#define</code>方式来做。</p>
+<p>当然了，博客里给出的方案实现比较简陋，需要手动提取想要混淆的类及方法名。而且似乎因为版本更新等原因，这个比较旧的脚本现在也不能直接拿来用了，所以最好还是当作原理学习的样板吧。不过要是想找个立取可用的工具，可以用stevchen大神的开源工具<a href="https://github.com/chenxiancai/STCObfuscator" target="_blank" rel="noopener">STCObfuscator</a>。</p>
+<p>相较于简陋的”原理样板”来说，<code>STCObfuscator</code>就很贴心了，先是用<code>runtime</code>+<code>linkmap</code>的方式，帮我们自动提取需要混淆的方法名和类名，然后又过滤掉对类名、方法名的硬编码引用。</p>
+<p>但是除了类名、方法名的混淆以外，代码里的硬编码，比如最常见的写死了的字符串，也是有必要进行混淆的。</p>
+<h2 id="1-分析实现"><a href="#1-分析实现" class="headerlink" title="1. 分析实现"></a>1. 分析实现</h2><p>硬编码的类型有很多种，凡是在代码里写死了的字符串、数字等等，都能算作是。但对于马甲包或者加固工作来说，影响比较大的还是字符串类型数据。那整个的混淆过程，就可以分成下面这几步：</p>
+<ul>
+<li>1) 字符串代码块定位</li>
+<li>2) 字符串代码块内容加密</li>
+<li>3) 替换原代码块</li>
+</ul>
+<p>经过这三步操作以后，我们的代码里，原先的字符串代码块文本内容，就变成了已经加密后的密文。不过这并不影响我们的使用，因为等需要用到这个字符串的时候，我们会通过原生端的解密方法解密出来。</p>
+<h3 id="1-1-字符串代码块定位"><a href="#1-1-字符串代码块定位" class="headerlink" title="1.1 字符串代码块定位"></a>1.1 字符串代码块定位</h3><p>首先，<strong><em>人工检测是不可能的，这辈子都不可能的</em></strong>。而且对于字符串代码块的自动检测runtime是用不上了，所以最浅显的方案就是直接文本检查。即通过对原代码文本的检查，找出代码中字符串代码块的位置。目前采用的方案，是通过正则表达式，去查找<code>@&quot;</code>开头，<code>&quot;</code>结尾的代码块。例如对于下面这段代码，就可以定位出有两个字符串代码块。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">- (void)testMethod</span><br><span class="line">&#123;</span><br><span class="line">    NSString *testString = [NSString stringWithFormat:@&quot;testContent: %@&quot;, @&quot;abc\ndef&quot;];</span><br><span class="line">    NSLog(testString);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对于这种定位方案，其实没啥好说的，无非就是正则表达式写仔细点，尽量多的去匹配各种神奇的代码写法就好。而唯一需要注意的点，就在于面对带有<code>%@</code>这种占位符的字符串，如果没有筛选出占位符以外的字符串并混淆的方案，就暂时不要对它进行处理。而现有常见的占位符种类，可以参照<a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Strings/Articles/formatSpecifiers.html" target="_blank" rel="noopener">苹果的技术文档</a>，大致有这么多种。</p>
+<h3 id="1-2-字符串代码块内容加密"><a href="#1-2-字符串代码块内容加密" class="headerlink" title="1.2 字符串代码块内容加密"></a>1.2 字符串代码块内容加密</h3><p>因为加密了以后的内容，还是需要解密后使用的，所以就不能用MD5算法这种不可逆的方式来做了。再加上考虑到解密操作对性能的影响，所以目前选用的加密方案，是速度比较快的AES方案。具体的加密模块代码实现，可以在各个论坛找到，在这里就不做太多介绍了。</p>
+<h3 id="1-3-替换原代码块"><a href="#1-3-替换原代码块" class="headerlink" title="1.3 替换原代码块"></a>1.3 替换原代码块</h3><p>经过上一步的操作，我们已经得到了加密后的密文。再结合第一步中找到的代码块位置，我们就可以把原代码中的字符串代码块内容，替换成无法直接阅读的密文。</p>
+<p>不过虽然这时加密的目的是做到了，但编译运行肯定会出错的。所以我们还得整一个解密方法类，跟一个定义了所有密文的定义文件。那到此为止，我们的工作就已经全部完成了，代码中的字符串代码块，也变成了<code>[BAHCKey02b5dc445f4c6f7c3c0a5e50d406cc65 BAHC_Decrypt]</code>类似的句子。</p>
+<h2 id="2-代码地址"><a href="#2-代码地址" class="headerlink" title="2. 代码地址"></a>2. 代码地址</h2><p>目前的工具已经做好了第一版，github地址<a href="https://github.com/BenArvin/BAHardCodeEncoder" target="_blank" rel="noopener">点这里</a>。</p>
+<p>具体的使用方法可以参照readme文件的介绍。</p>
+<h2 id="3-优化"><a href="#3-优化" class="headerlink" title="3. 优化"></a>3. 优化</h2><p>虽然第一版的工具已经做出来了，但还是存在问题的，主要是下面这两个：</p>
+<ul>
+<li>字符串代码块识别不够精准</li>
+<li>反混淆速度太慢</li>
+</ul>
+<h3 id="3-1-提高字符串代码块识别精准度"><a href="#3-1-提高字符串代码块识别精准度" class="headerlink" title="3.1 提高字符串代码块识别精准度"></a>3.1 提高字符串代码块识别精准度</h3><p>因为目前的识别方式，是使用正则表达式去匹配，所以难免会漏掉一些神奇的代码写法，甚至于也会因为部分字符串内容的原因，导致识别结果出错。</p>
+<p>那么该怎样去提高识别精准度呢？答案就是Clang。作为苹果官方编译器LLVM中的一部分，Clang对于OC语法的识别必须是非常精准的。所以，管他三七二十一，实践万岁，我们先来找个Clang的python库尝试跑一把。</p>
+<p>libclang是Clang自带的提供给python用的接口库，<a href="http://llvm.org/svn/llvm-project/cfe/trunk/bindings/python/" target="_blank" rel="noopener">地址在这里</a>。当然了，想要用的话，还是得把整个Clang目录都下载下来。</p>
+<p>好了，现在已经下载下来啦，我们就跑起来吧！想多了，很抱歉，文档奇缺，就只有几个没啥文档说明的例子，所以想要跑起来，那还真是有点难度的。所以咱们还是老老实实一步一步来，先了解下Clang的基本知识吧。</p>
+<p>首先是Clang官方网站的标题: <a href="http://clang.llvm.org" target="_blank" rel="noopener">Clang: a C language family frontend for LLVM</a>。那这句话里的”前端”(frontend)到底啥意思呢？下面是百度百科的编译器词条中，对于前端的介绍:</p>
+<blockquote>
+<p>前端主要负责解析（parse）输入的源代码，由语法分析器和语意分析器协同工作。语法分析器负责把源代码中的‘单词’（Token）找出来，语意分析器把这些分散的单词按预先定义好的语法组装成有意义的表达式，语句 ，函数等等。例如“a = b + c;”前端语法分析器看到的是“a， =， b ， +， c;”，语意分析器按定义的语法，先把他们组装成表达式“b + c”，再组装成“a = b + c”的语句。前端还负责语义（semantic checking）的检查，例如检测参与运算的变量是否是同一类型的，简单的错误处理。最终的结果常常是一个抽象的语法树（abstract syntax tree，或 AST），这样后端可以在此基础上进一步优化，处理。</p>
+</blockquote>
+<p>所以简而言之，Clang的工作，就是把源代码处理成，可被LLVM识别的低级类汇编代码，也就是LLVM中间表达码(LLVM Intermediate Representation)。而Clang内部的工作步骤，则大致分成这么几步:</p>
+<ul>
+<li>1) 预处理: 把<code>#include</code>的头文件中包含的内容，嵌入到目标代码文件之类的工作</li>
+<li>2) 词法解析: 把预处理得到的代码文件，解析成抽象语法树(AST)</li>
+<li>3) 静态分析: 对AST进行分析，找出代码中的一部分错误</li>
+<li>4) 代码生成: 生成LLVM中间表达码</li>
+<li>5) 优化: 把代码中的部分递归改成循环之类的工作</li>
+</ul>
+<p>既然基本知识看完了，那么也就有了大致的实现方案，即通过对AST的读取，拿到字符串代码块的位置和内容。咱们先验证一下方案的可行性，下面是需要解析的原代码:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">#import &quot;TestClass.h&quot;</span><br><span class="line"></span><br><span class="line">#define TestDefine @&quot;testDefineContent&quot;</span><br><span class="line"></span><br><span class="line">NSString *const testStatic = @&quot;testStaticContent&quot;;</span><br><span class="line"></span><br><span class="line">@implementation TestClass</span><br><span class="line"></span><br><span class="line">- (void)test</span><br><span class="line">&#123;</span><br><span class="line">    NSString *testVariable1 = @&quot;testVariable1Content&quot;;</span><br><span class="line">    NSLog(@&quot;testLog&quot;);</span><br><span class="line">    NSString *testVariable2 = @&quot;testVariable2Content&quot;;</span><br><span class="line">    NSString *testAssemble = [NSString stringWithFormat:@&quot;%@%@&quot;, testVariable2, @&quot;123&quot;];</span><br><span class="line">    NSLog(TestDefine);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p>然后咱们使用Xcode自带的Clang工具，执行下面这行命令来导出AST:</p>
+<p><code>clang -Xclang -ast-dump TestClass.m</code></p>
+<p>运行结果长这样:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">TestClass.m:9:9: fatal error: &apos;TestClass.h&apos; file not found</span><br><span class="line">#import &quot;TestClass.h&quot;</span><br><span class="line">        ^~~~~~~~~~~~~</span><br><span class="line">TranslationUnitDecl 0x7fde0a8012e8 &lt;&lt;invalid sloc&gt;&gt; &lt;invalid sloc&gt;</span><br><span class="line">|-TypedefDecl 0x7fde0a801860 &lt;&lt;invalid sloc&gt;&gt; &lt;invalid sloc&gt; implicit __int128_t &apos;__int128&apos;</span><br><span class="line">| `-BuiltinType 0x7fde0a801580 &apos;__int128&apos;</span><br><span class="line">|-TypedefDecl 0x7fde0a8018d0 &lt;&lt;invalid sloc&gt;&gt; &lt;invalid sloc&gt; implicit __uint128_t &apos;unsigned __int128&apos;</span><br><span class="line">| `-BuiltinType 0x7fde0a8015a0 &apos;unsigned __int128&apos;</span><br><span class="line">|-TypedefDecl 0x7fde0a801970 &lt;&lt;invalid sloc&gt;&gt; &lt;invalid sloc&gt; implicit SEL &apos;SEL *&apos;</span><br><span class="line">| `-PointerType 0x7fde0a801930 &apos;SEL *&apos;</span><br><span class="line">|   `-BuiltinType 0x7fde0a8017c0 &apos;SEL&apos;</span><br><span class="line">|-TypedefDecl 0x7fde0a801a58 &lt;&lt;invalid sloc&gt;&gt; &lt;invalid sloc&gt; implicit id &apos;id&apos;</span><br><span class="line">| `-ObjCObjectPointerType 0x7fde0a801a00 &apos;id&apos;</span><br><span class="line">|   `-ObjCObjectType 0x7fde0a8019d0 &apos;id&apos;</span><br><span class="line">|-TypedefDecl 0x7fde0a801b38 &lt;&lt;invalid sloc&gt;&gt; &lt;invalid sloc&gt; implicit Class &apos;Class&apos;</span><br><span class="line">| `-ObjCObjectPointerType 0x7fde0a801ae0 &apos;Class&apos;</span><br><span class="line">|   `-ObjCObjectType 0x7fde0a801ab0 &apos;Class&apos;</span><br><span class="line">|-ObjCInterfaceDecl 0x7fde0a801b90 &lt;&lt;invalid sloc&gt;&gt; &lt;invalid sloc&gt; implicit Protocol</span><br><span class="line">|-TypedefDecl 0x7fde0a801ec8 &lt;&lt;invalid sloc&gt;&gt; &lt;invalid sloc&gt; implicit __NSConstantString &apos;struct __NSConstantString_tag&apos;</span><br><span class="line">| `-RecordType 0x7fde0a801cd0 &apos;struct __NSConstantString_tag&apos;</span><br><span class="line">|   `-Record 0x7fde0a801c40 &apos;__NSConstantString_tag&apos;</span><br><span class="line">|-TypedefDecl 0x7fde0a801f60 &lt;&lt;invalid sloc&gt;&gt; &lt;invalid sloc&gt; implicit __builtin_ms_va_list &apos;char *&apos;</span><br><span class="line">| `-PointerType 0x7fde0a801f20 &apos;char *&apos;</span><br><span class="line">|   `-BuiltinType 0x7fde0a801380 &apos;char&apos;</span><br><span class="line">|-TypedefDecl 0x7fde0a836a78 &lt;&lt;invalid sloc&gt;&gt; &lt;invalid sloc&gt; implicit __builtin_va_list &apos;struct __va_list_tag [1]&apos;</span><br><span class="line">| `-ConstantArrayType 0x7fde0a836a20 &apos;struct __va_list_tag [1]&apos; 1 </span><br><span class="line">|   `-RecordType 0x7fde0a836890 &apos;struct __va_list_tag&apos;</span><br><span class="line">|     `-Record 0x7fde0a836800 &apos;__va_list_tag&apos;</span><br><span class="line">|-VarDecl 0x7fde0a836b30 &lt;TestClass.m:13:1, col:17&gt; col:17 invalid testStatic &apos;int *const&apos;</span><br><span class="line">|-ObjCInterfaceDecl 0x7fde0a836d08 &lt;line:15:1, &lt;invalid sloc&gt;&gt; col:17 implicit TestClass</span><br><span class="line">| `-ObjCImplementation 0x7fde0a836e10 &apos;TestClass&apos;</span><br><span class="line">|-ObjCImplementationDecl 0x7fde0a836e10 &lt;col:1, line:26:1&gt; line:15:17 TestClass</span><br><span class="line">| |-ObjCInterface 0x7fde0a836d08 &apos;TestClass&apos;</span><br><span class="line">| `-ObjCMethodDecl 0x7fde0a836f60 &lt;line:17:1, line:24:1&gt; line:17:1 - test &apos;void&apos;</span><br><span class="line">|   |-ImplicitParamDecl 0x7fde0a837018 &lt;&lt;invalid sloc&gt;&gt; &lt;invalid sloc&gt; implicit self &apos;TestClass *&apos;</span><br><span class="line">|   |-ImplicitParamDecl 0x7fde0a8370a0 &lt;&lt;invalid sloc&gt;&gt; &lt;invalid sloc&gt; implicit _cmd &apos;SEL&apos;:&apos;SEL *&apos;</span><br><span class="line">|   `-CompoundStmt 0x7fde0a837630 &lt;line:18:1, line:24:1&gt;</span><br><span class="line">|     |-CallExpr 0x7fde0a8374a0 &lt;line:20:5, col:21&gt; &apos;void&apos;</span><br><span class="line">|     | |-ImplicitCastExpr 0x7fde0a837488 &lt;col:5&gt; &apos;void (*)(id, ...)&apos; &lt;FunctionToPointerDecay&gt;</span><br><span class="line">|     | | `-DeclRefExpr 0x7fde0a837378 &lt;col:5&gt; &apos;void (id, ...)&apos; Function 0x7fde0a837218 &apos;NSLog&apos; &apos;void (id, ...)&apos;</span><br><span class="line">|     | `-ImplicitCastExpr 0x7fde0a8374d0 &lt;col:11, col:12&gt; &apos;id&apos;:&apos;id&apos; &lt;BitCast&gt;</span><br><span class="line">|     |   `-ObjCStringLiteral 0x7fde0a837408 &lt;col:11, col:12&gt; &apos;NSString *&apos;</span><br><span class="line">|     |     `-StringLiteral 0x7fde0a8373d8 &lt;col:12&gt; &apos;char [8]&apos; lvalue &quot;testLog&quot;</span><br><span class="line">|     `-CallExpr 0x7fde0a8375e8 &lt;line:23:5, col:21&gt; &apos;void&apos;</span><br><span class="line">|       |-ImplicitCastExpr 0x7fde0a8375d0 &lt;col:5&gt; &apos;void (*)(id, ...)&apos; &lt;FunctionToPointerDecay&gt;</span><br><span class="line">|       | `-DeclRefExpr 0x7fde0a837548 &lt;col:5&gt; &apos;void (id, ...)&apos; Function 0x7fde0a837218 &apos;NSLog&apos; &apos;void (id, ...)&apos;</span><br><span class="line">|       `-ImplicitCastExpr 0x7fde0a837618 &lt;line:11:20, col:21&gt; &apos;id&apos;:&apos;id&apos; &lt;BitCast&gt;</span><br><span class="line">|         `-ObjCStringLiteral 0x7fde0a8375b0 &lt;col:20, col:21&gt; &apos;NSString *&apos;</span><br><span class="line">|           `-StringLiteral 0x7fde0a837570 &lt;col:21&gt; &apos;char [18]&apos; lvalue &quot;testDefineContent&quot;</span><br><span class="line">`-FunctionDecl 0x7fde0a837218 &lt;line:20:5&gt; col:5 implicit used NSLog &apos;void (id, ...)&apos; extern</span><br><span class="line">  |-ParmVarDecl 0x7fde0a8372b8 &lt;&lt;invalid sloc&gt;&gt; &lt;invalid sloc&gt; &apos;id&apos;:&apos;id&apos;</span><br><span class="line">  `-FormatAttr 0x7fde0a837320 &lt;col:5&gt; Implicit NSString 1 2</span><br><span class="line">1 error generated.</span><br></pre></td></tr></table></figure>
+<p>仔细看一看执行结果，我们会发现有几行的首部写的是<code>StringLiteral</code>，而且该行的后面，的确跟着的是我们代码中写的字符串代码块内容，甚至于更棒的是，还标出了在原代码中的准确行列位置。</p>
+<p>但是，再仔细对比一下源码，<code>testStatic</code>、<code>testVariable1</code>、<code>testVariable2</code>、<code>testAssemble</code>的内容都哪儿去了？为什么只剩下了<code>testLog</code>跟<code>testDefine</code>的内容。</p>
+<p>这是因为，在预处理阶段，Clang就已经去除掉了无用的代码，而<code>testVariable1</code>等我们发现不见了的代码块，刚好就是因为没有引用到，所以就被摘除掉了。</p>
+<p>但是这里还有有个疑点的，那就是对于<code>testStatic</code>，如果我们在<code>TestClass.h</code>文件中，声明了<code>extern</code>属性的话，<code>testStatic</code>就有可能在其他文件内被引用到了，不应该被从AST中去掉。所以按照这个猜想，我们把<code>TestClass.h</code>文件也纳入到刚才的代码行中，变成这样的写法:</p>
+<p><code>clang -Xclang -ast-dump TestClass.h TestClass.m</code></p>
+<p>这时候，我们发现命令行的运行结果中，的确是包含了<code>testStatic</code>代码块的信息。但整个的运行结果，也变成了28万多行之巨。这是因为在预处理时，Clang也把<code>#import &lt;Foundation/Foundation.h&gt;</code>时引入的<code>Foundation</code>代码，插入到了<code>TestClass</code>的代码中。</p>
+<p>至此我们面临一个两难的选择: 要么只识别部分字符串代码块，要么就得在二十万多行的内容里去筛查。理所当然，这两种方案我们肯定都难以满意，甚至于难以实用化。那还有没有其他办法，能稍微让我们满意一些呢？试一下这行命令:</p>
+<p><code>clang -Xclang -dump-raw-tokens TestClass.m</code></p>
+<p>运行的结果是这样的:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br></pre></td><td class="code"><pre><span class="line">comment &apos;//&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:1:1&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line">&apos;		Loc=&lt;TestClass.m:1:3&gt;</span><br><span class="line">comment &apos;//  TestClass.m&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:2:1&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line">&apos;		Loc=&lt;TestClass.m:2:16&gt;</span><br><span class="line">comment &apos;//&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:3:1&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line">&apos;		Loc=&lt;TestClass.m:3:3&gt;</span><br><span class="line">comment &apos;//&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:4:1&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line">&apos;		Loc=&lt;TestClass.m:4:3&gt;</span><br><span class="line">comment &apos;//  Created by BenArvin on 2018/11/26.&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:5:1&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line">&apos;		Loc=&lt;TestClass.m:5:39&gt;</span><br><span class="line">comment &apos;//  Copyright © 2018 BenArvin. All rights reserved.&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:6:1&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line">&apos;		Loc=&lt;TestClass.m:6:53&gt;</span><br><span class="line">comment &apos;//&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:7:1&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line"></span><br><span class="line">&apos;		Loc=&lt;TestClass.m:7:3&gt;</span><br><span class="line">hash &apos;#&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:9:1&gt;</span><br><span class="line">raw_identifier &apos;import&apos;		Loc=&lt;TestClass.m:9:2&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:9:8&gt;</span><br><span class="line">string_literal &apos;&quot;TestClass.h&quot;&apos;		Loc=&lt;TestClass.m:9:9&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line"></span><br><span class="line">&apos;		Loc=&lt;TestClass.m:9:22&gt;</span><br><span class="line">hash &apos;#&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:11:1&gt;</span><br><span class="line">raw_identifier &apos;define&apos;		Loc=&lt;TestClass.m:11:2&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:11:8&gt;</span><br><span class="line">raw_identifier &apos;TestDefine&apos;		Loc=&lt;TestClass.m:11:9&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:11:19&gt;</span><br><span class="line">at &apos;@&apos;		Loc=&lt;TestClass.m:11:20&gt;</span><br><span class="line">string_literal &apos;&quot;testDefineContent&quot;&apos;		Loc=&lt;TestClass.m:11:21&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line"></span><br><span class="line">&apos;		Loc=&lt;TestClass.m:11:40&gt;</span><br><span class="line">raw_identifier &apos;NSString&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:13:1&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:13:9&gt;</span><br><span class="line">star &apos;*&apos;		Loc=&lt;TestClass.m:13:10&gt;</span><br><span class="line">raw_identifier &apos;const&apos;		Loc=&lt;TestClass.m:13:11&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:13:16&gt;</span><br><span class="line">raw_identifier &apos;testStatic&apos;		Loc=&lt;TestClass.m:13:17&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:13:27&gt;</span><br><span class="line">equal &apos;=&apos;		Loc=&lt;TestClass.m:13:28&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:13:29&gt;</span><br><span class="line">at &apos;@&apos;		Loc=&lt;TestClass.m:13:30&gt;</span><br><span class="line">string_literal &apos;&quot;testStaticContent&quot;&apos;		Loc=&lt;TestClass.m:13:31&gt;</span><br><span class="line">semi &apos;;&apos;		Loc=&lt;TestClass.m:13:50&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line"></span><br><span class="line">&apos;		Loc=&lt;TestClass.m:13:51&gt;</span><br><span class="line">at &apos;@&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:15:1&gt;</span><br><span class="line">raw_identifier &apos;implementation&apos;		Loc=&lt;TestClass.m:15:2&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:15:16&gt;</span><br><span class="line">raw_identifier &apos;TestClass&apos;		Loc=&lt;TestClass.m:15:17&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line"></span><br><span class="line">&apos;		Loc=&lt;TestClass.m:15:26&gt;</span><br><span class="line">minus &apos;-&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:17:1&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:17:2&gt;</span><br><span class="line">l_paren &apos;(&apos;		Loc=&lt;TestClass.m:17:3&gt;</span><br><span class="line">raw_identifier &apos;void&apos;		Loc=&lt;TestClass.m:17:4&gt;</span><br><span class="line">r_paren &apos;)&apos;		Loc=&lt;TestClass.m:17:8&gt;</span><br><span class="line">raw_identifier &apos;test&apos;		Loc=&lt;TestClass.m:17:9&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line">&apos;		Loc=&lt;TestClass.m:17:13&gt;</span><br><span class="line">l_brace &apos;&#123;&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:18:1&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line">    &apos;		Loc=&lt;TestClass.m:18:2&gt;</span><br><span class="line">raw_identifier &apos;NSString&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:19:5&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:19:13&gt;</span><br><span class="line">star &apos;*&apos;		Loc=&lt;TestClass.m:19:14&gt;</span><br><span class="line">raw_identifier &apos;testVariable1&apos;		Loc=&lt;TestClass.m:19:15&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:19:28&gt;</span><br><span class="line">equal &apos;=&apos;		Loc=&lt;TestClass.m:19:29&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:19:30&gt;</span><br><span class="line">at &apos;@&apos;		Loc=&lt;TestClass.m:19:31&gt;</span><br><span class="line">string_literal &apos;&quot;testVariable1Content&quot;&apos;		Loc=&lt;TestClass.m:19:32&gt;</span><br><span class="line">semi &apos;;&apos;		Loc=&lt;TestClass.m:19:54&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line">    &apos;		Loc=&lt;TestClass.m:19:55&gt;</span><br><span class="line">raw_identifier &apos;NSLog&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:20:5&gt;</span><br><span class="line">l_paren &apos;(&apos;		Loc=&lt;TestClass.m:20:10&gt;</span><br><span class="line">at &apos;@&apos;		Loc=&lt;TestClass.m:20:11&gt;</span><br><span class="line">string_literal &apos;&quot;testLog&quot;&apos;		Loc=&lt;TestClass.m:20:12&gt;</span><br><span class="line">r_paren &apos;)&apos;		Loc=&lt;TestClass.m:20:21&gt;</span><br><span class="line">semi &apos;;&apos;		Loc=&lt;TestClass.m:20:22&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line">    &apos;		Loc=&lt;TestClass.m:20:23&gt;</span><br><span class="line">raw_identifier &apos;NSString&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:21:5&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:21:13&gt;</span><br><span class="line">star &apos;*&apos;		Loc=&lt;TestClass.m:21:14&gt;</span><br><span class="line">raw_identifier &apos;testVariable2&apos;		Loc=&lt;TestClass.m:21:15&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:21:28&gt;</span><br><span class="line">equal &apos;=&apos;		Loc=&lt;TestClass.m:21:29&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:21:30&gt;</span><br><span class="line">at &apos;@&apos;		Loc=&lt;TestClass.m:21:31&gt;</span><br><span class="line">string_literal &apos;&quot;testVariable2Content&quot;&apos;		Loc=&lt;TestClass.m:21:32&gt;</span><br><span class="line">semi &apos;;&apos;		Loc=&lt;TestClass.m:21:54&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line">    &apos;		Loc=&lt;TestClass.m:21:55&gt;</span><br><span class="line">raw_identifier &apos;NSString&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:22:5&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:22:13&gt;</span><br><span class="line">star &apos;*&apos;		Loc=&lt;TestClass.m:22:14&gt;</span><br><span class="line">raw_identifier &apos;testAssemble&apos;		Loc=&lt;TestClass.m:22:15&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:22:27&gt;</span><br><span class="line">equal &apos;=&apos;		Loc=&lt;TestClass.m:22:28&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:22:29&gt;</span><br><span class="line">l_square &apos;[&apos;		Loc=&lt;TestClass.m:22:30&gt;</span><br><span class="line">raw_identifier &apos;NSString&apos;		Loc=&lt;TestClass.m:22:31&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:22:39&gt;</span><br><span class="line">raw_identifier &apos;stringWithFormat&apos;		Loc=&lt;TestClass.m:22:40&gt;</span><br><span class="line">colon &apos;:&apos;		Loc=&lt;TestClass.m:22:56&gt;</span><br><span class="line">at &apos;@&apos;		Loc=&lt;TestClass.m:22:57&gt;</span><br><span class="line">string_literal &apos;&quot;%@%@&quot;&apos;		Loc=&lt;TestClass.m:22:58&gt;</span><br><span class="line">comma &apos;,&apos;		Loc=&lt;TestClass.m:22:64&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:22:65&gt;</span><br><span class="line">raw_identifier &apos;testVariable2&apos;		Loc=&lt;TestClass.m:22:66&gt;</span><br><span class="line">comma &apos;,&apos;		Loc=&lt;TestClass.m:22:79&gt;</span><br><span class="line">unknown &apos; &apos;		Loc=&lt;TestClass.m:22:80&gt;</span><br><span class="line">at &apos;@&apos;		Loc=&lt;TestClass.m:22:81&gt;</span><br><span class="line">string_literal &apos;&quot;123&quot;&apos;		Loc=&lt;TestClass.m:22:82&gt;</span><br><span class="line">r_square &apos;]&apos;		Loc=&lt;TestClass.m:22:87&gt;</span><br><span class="line">semi &apos;;&apos;		Loc=&lt;TestClass.m:22:88&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line">    &apos;		Loc=&lt;TestClass.m:22:89&gt;</span><br><span class="line">raw_identifier &apos;NSLog&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:23:5&gt;</span><br><span class="line">l_paren &apos;(&apos;		Loc=&lt;TestClass.m:23:10&gt;</span><br><span class="line">raw_identifier &apos;TestDefine&apos;		Loc=&lt;TestClass.m:23:11&gt;</span><br><span class="line">r_paren &apos;)&apos;		Loc=&lt;TestClass.m:23:21&gt;</span><br><span class="line">semi &apos;;&apos;		Loc=&lt;TestClass.m:23:22&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line">&apos;		Loc=&lt;TestClass.m:23:23&gt;</span><br><span class="line">r_brace &apos;&#125;&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:24:1&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line"></span><br><span class="line">&apos;		Loc=&lt;TestClass.m:24:2&gt;</span><br><span class="line">at &apos;@&apos;	 [StartOfLine]	Loc=&lt;TestClass.m:26:1&gt;</span><br><span class="line">raw_identifier &apos;end&apos;		Loc=&lt;TestClass.m:26:2&gt;</span><br><span class="line">unknown &apos;</span><br><span class="line">&apos;		Loc=&lt;TestClass.m:26:5&gt;</span><br><span class="line">ld: file not found: /var/folders/19/s4_rrq312qj3qflj0mmlpwnr0000gn/T/TestClass-216cbd.o</span><br><span class="line">clang: error: linker command failed with exit code 1 (use -v to see invocation)</span><br></pre></td></tr></table></figure>
+<p>我们期待已久的结果终于得到了，只包含本文件内容，没有除去未引用的无用代码。要是libclang的python库中也包含相关的python接口，那就完美了。不过可惜的是，并没有找到相关的python接口，所以我们只能退而求其次，在python中执行bash命令，然后再以文本方式分析命令的运行结果，进而得到最终的字符串代码块位置和内容。</p>
+<h3 id="3-2-反混淆速度太慢"><a href="#3-2-反混淆速度太慢" class="headerlink" title="3.2 反混淆速度太慢"></a>3.2 反混淆速度太慢</h3><p>反混淆的意思，是指把已经被混淆了的代码恢复原样，这种操作的原理没啥好说的，就只是在代码里找到<code>[BAHCKey02b5dc445f4c6f7c3c0a5e50d406cc65 BAHC_Decrypt]</code>样式的代码块，替换成对应的解密后的字符串内容而已。</p>
+<p>可是目前的第一版实现里，反混淆的速度是比较慢的，具体原因，还得从工作流程上找。现在代码的工作流程大致如下:</p>
+<ul>
+<li>1) 把宏定义了所有加密后密文的<code>.h</code>文件，解析成字典</li>
+<li>2) 逐个解析代码文件，在代码中查找是否包含字典中的值并替换</li>
+</ul>
+<p>这种做法在代码量小的时候问题不大，但在大型工程里，解析后的字典key-value值会有成千上万个，导致挨个拿去在代码文本中查找的操作耗时太长。</p>
+<p>当然，改进的方法肯定是有的，最简单的，我们可以先用正则表达式，去匹配出符合<code>[BAHCKey* BAHC_Decrypt]</code>样式的代码块，然后把这段代码块中的MD5值当作是key，去从字典中取出对应的字符串原文。</p>
+<p>这么做肯定是快了许多，但问题在于为什么能变快？用key从字典中取值用到了哈希的原理，这我们都知道。可正则表达式为什么又能这么快呢？这个问题的答案，就得从算法层面去探究了。大致的解释，是因为通过对自动机的使用，使得算法复杂度大幅度降低了。这部分相关的内容，就留到后面再深入研究。</p>
+<p>至此，代码优化的方向及解决方案都已经确定了，后面有空的话再做第二版的实现。</p>
+<h2 id="4-附录"><a href="#4-附录" class="headerlink" title="4. 附录"></a>4. 附录</h2><p>libclang python库的简单代码样例:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">#!/usr/bin/python</span><br><span class="line"># -*- coding: UTF-8 -*-</span><br><span class="line"></span><br><span class="line">import sys, os</span><br><span class="line">reload(sys)</span><br><span class="line">sys.setdefaultencoding(&quot;utf-8&quot;)</span><br><span class="line">import clang.cindex</span><br><span class="line"></span><br><span class="line">def printDetail(cursor):</span><br><span class="line">	print(&apos;\nspelling: &apos; + cursor.spelling + &apos; | kind: &apos; + str(cursor.kind) + &apos; | extent: &apos; + str(cursor.extent))</span><br><span class="line"></span><br><span class="line">def iterAST(cursor):</span><br><span class="line">	printDetail(cursor)</span><br><span class="line">	for cursorItem in cursor.get_children():</span><br><span class="line">		if cursorItem.get_children == None:</span><br><span class="line">			printDetail(cursorItem)</span><br><span class="line">		else:</span><br><span class="line">			iterAST(cursorItem)</span><br><span class="line"></span><br><span class="line">if __name__ == &apos;__main__&apos;:</span><br><span class="line">	#config libclang path, you can use &apos;clang --version&apos; find it</span><br><span class="line">	if clang.cindex.Config.loaded != True:</span><br><span class="line">		clang.cindex.Config.set_library_path(&apos;/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib&apos;)</span><br><span class="line">	index = clang.cindex.Index.create()</span><br><span class="line">	# tu = index.parse(sys.argv[1], &#123;&quot;-Wunused&quot;&#125;, None, clang.cindex.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD)</span><br><span class="line">	tu = index.parse(sys.argv[1], &#123;&quot;-Wunused&quot;&#125;, None, clang.cindex.TranslationUnit.PARSE_NONE)</span><br><span class="line">	print(&apos;Translation unit:&apos;, tu.spelling)</span><br><span class="line">	iterAST(tu.cursor)</span><br></pre></td></tr></table></figure>
+<p>这段代码的作用，是通过对libclang python库的使用，生成并解析AST。不过因为咱们解决方案的改变，这种方式最终还是没用上。但面对其他需求，还是有可用之处的。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+       
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+            <a href="/tags/算法/" rel="tag"># 算法</a>
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+            <a href="/tags/加固/" rel="tag"># 加固</a>
+          
+            <a href="/tags/安全/" rel="tag"># 安全</a>
+          
+            <a href="/tags/混淆/" rel="tag"># 混淆</a>
+          
+            <a href="/tags/Clang/" rel="tag"># Clang</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/10/10/iOS分片下载器（一）/" rel="next" title="iOS分片下载器(一)">
+                <i class="fa fa-chevron-left"></i> iOS分片下载器(一)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/11/26/算法学习之Aho-Corasick/" rel="prev" title="算法学习之Aho-Corasick">
+                算法学习之Aho-Corasick <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ben Arvin</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v6.6.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.6.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.6.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.6.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.6.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.6.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

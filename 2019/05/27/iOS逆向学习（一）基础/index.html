@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.6.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.6.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.6.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.6.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '6.6.0',
+    sidebar: {"position":"left","display":"remove","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="因为工作原因，最近开始接触iOS逆向这块，所以在这里记录、总结一下。这一篇主要是基本知识、常用工具。 一、基本知识首先，逆向一款APP，我们需要什么环境？那当然是一部越狱手机。手机越狱的方法这里不讨论，总之我们需要一部越狱的手机，来获取APP的ipa包，以及后面的动态debug等逆向操作。 Tips: 越狱手机的系统版本不限，只要能装上并运行我们想要逆向的APP就好。例如我们想要逆向的APP最低支">
+<meta name="keywords" content="iOS,逆向">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS逆向学习（一）基础">
+<meta property="og:url" content="https://benarvin.github.io/2019/05/27/iOS逆向学习（一）基础/index.html">
+<meta property="og:site_name" content="BenArvin&#39;s blog">
+<meta property="og:description" content="因为工作原因，最近开始接触iOS逆向这块，所以在这里记录、总结一下。这一篇主要是基本知识、常用工具。 一、基本知识首先，逆向一款APP，我们需要什么环境？那当然是一部越狱手机。手机越狱的方法这里不讨论，总之我们需要一部越狱的手机，来获取APP的ipa包，以及后面的动态debug等逆向操作。 Tips: 越狱手机的系统版本不限，只要能装上并运行我们想要逆向的APP就好。例如我们想要逆向的APP最低支">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2021-02-19T08:49:21.054Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="iOS逆向学习（一）基础">
+<meta name="twitter:description" content="因为工作原因，最近开始接触iOS逆向这块，所以在这里记录、总结一下。这一篇主要是基本知识、常用工具。 一、基本知识首先，逆向一款APP，我们需要什么环境？那当然是一部越狱手机。手机越狱的方法这里不讨论，总之我们需要一部越狱的手机，来获取APP的ipa包，以及后面的动态debug等逆向操作。 Tips: 越狱手机的系统版本不限，只要能装上并运行我们想要逆向的APP就好。例如我们想要逆向的APP最低支">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="BenArvin's blog" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="https://benarvin.github.io/2019/05/27/iOS逆向学习（一）基础/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>iOS逆向学习（一）基础 | BenArvin's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">BenArvin's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">No code, no bug. No deploy, no error.</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://benarvin.github.io/2019/05/27/iOS逆向学习（一）基础/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ben Arvin">
+      <meta itemprop="description" content="No code, no bug. No deploy, no error.">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="BenArvin's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">iOS逆向学习（一）基础
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-05-27 23:00:00" itemprop="dateCreated datePublished" datetime="2019-05-27T23:00:00+08:00">2019-05-27</time>
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>因为工作原因，最近开始接触iOS逆向这块，所以在这里记录、总结一下。这一篇主要是基本知识、常用工具。</p>
+<h1 id="一、基本知识"><a href="#一、基本知识" class="headerlink" title="一、基本知识"></a>一、基本知识</h1><p>首先，逆向一款APP，我们需要什么环境？那当然是一部越狱手机。手机越狱的方法这里不讨论，总之我们需要一部越狱的手机，来获取APP的ipa包，以及后面的动态debug等逆向操作。</p>
+<p><code>Tips: 越狱手机的系统版本不限，只要能装上并运行我们想要逆向的APP就好。例如我们想要逆向的APP最低支持iOS8，那么越狱手机的系统版本，只要大于等于8就行。</code></p>
+<p>有了越狱手机以后，我们就可以正式开始逆向了。常见的逆向操作，大致分成下面这几步：</p>
+<p><code>应用砸壳</code> -&gt; <code>静态/动态分析</code> -&gt; <code>代码注入</code> -&gt; <code>打包重签名</code></p>
+<p>后面的内容，我们也按照这样的顺序来展开。</p>
+<h1 id="二、砸壳"><a href="#二、砸壳" class="headerlink" title="二、砸壳"></a>二、砸壳</h1><p>之所以需要砸壳这一步，是因为苹果会对发布包的ipa进行加密。常见的砸壳工具，有下面这三种：</p>
+<ul>
+<li><a href="https://github.com/KJCracks/Clutch" target="_blank" rel="noopener">Clutch</a></li>
+<li><a href="https://github.com/stefanesser/dumpdecrypted" target="_blank" rel="noopener">dumpdecrypted</a></li>
+<li><a href="https://github.com/AloneMonkey/frida-ios-dump" target="_blank" rel="noopener">frida-ios-dump</a></li>
+</ul>
+<p>这三种砸壳工具的使用，可以点进链接看说明，或者网上随便搜索一下就能找到一大堆帖子教你怎么用。所以，这里就不重复使用方法了。但有两个很重要的点需要注意：</p>
+<ul>
+<li>砸壳后的包，必须在越狱机、非越狱机上都能安装、启动成功，才能算得上是砸壳成功</li>
+<li>因为部分APP可能做了反逆向处理，所以砸壳成功的包，虽然能安装、启动，但却无法正常运行，甚至启动就闪退。对于反逆向的应对，砸壳阶段不用关注</li>
+</ul>
+<h1 id="三、静态-动态分析"><a href="#三、静态-动态分析" class="headerlink" title="三、静态/动态分析"></a>三、静态/动态分析</h1><p>这一步的目的，在于通过静态/动态分析的方法，了解并找到我们感兴趣的代码块、逻辑点。但是因为我们目前只有一个砸壳后的ipa包，所以我们就需要一些工具的辅助。</p>
+<ul>
+<li>class-dump: 导出所有类的头文件，可以在其中看到类名、公有属性、公有方法的定义，这一步有助于我们大致了解代码块的组成</li>
+<li>IDA: 反编译工具，可以把机器代码反编译成汇编代码，甚至可以把部分汇编代码块进一步反编译为OC之类的高级语言，当然还有其他例如调用关系图之类的高级功能</li>
+<li>hopper: 和IDA一样的反编译工具，功能虽然没有IDA强大，但其实对于我这种初学者来说也够用了</li>
+<li>Reveal: UI层级解析工具，可以像Xcode一样，解析展示APP的UI层级结构，帮助我们理解APP内window、viewController、view之间的关联</li>
+<li>cycript: 强大的动态调试工具，可以在APP运行的时候，对APP执行查看、改动操作，详细的使用方法可以参照<a href="http://www.cycript.org" target="_blank" rel="noopener">官网</a>。此外虽然常见的用法是在越狱环境下，但我们也可以通过framework集成的方式，在非越狱环境使用。同样的，操作方法自行搜索</li>
+<li>LLDB: 苹果自己提供的动态调试工具，虽然常规情况下只能debug自己的APP，但我们现在可是在越狱环境啊，debug第三方APP？那都不是事儿！第三方APP的debug方法网上搜索可以找到一大把</li>
+</ul>
+<h1 id="四、代码注入"><a href="#四、代码注入" class="headerlink" title="四、代码注入"></a>四、代码注入</h1><p>那么通过静态/动态的分析之后，我们虽然分析了大致的代码结构，定位了关键目标代码块。但如果我们想不仅仅是观察，更想对原代码原APP进行改动，这时就需要使用代码注入。常见的代码注入，基本都是通过hook的原理去做的。常见的hook工具有下面这几种：</p>
+<ul>
+<li>Logos Tweak: 使用logos语法（不要怕，语法很简单，看一眼就会），objc、C方法都可以hook。使用方法网上一大把，不过对于logos语法，最好先看一下<a href="https://iphonedevwiki.net/index.php/Logos" target="_blank" rel="noopener">iPhoneDevWiki上的介绍</a></li>
+<li>CaptainHook: 可以用来hook objc方法</li>
+<li>fishhook: 可以用来hook C方法</li>
+</ul>
+<p>这三种工具当中，最常用的是logos。需要注意的是，这三种代码注入的方式，都是利用dyld机制实现的。所以无论是在越狱机，还是在非越狱机上都可以执行。而其他的例如怎么hook block之类的，基本也都大同小异，可以自己搜索一下。</p>
+<p>当然除了代码注入以外，如果有需要，我们也可以通过直接修改可执行文件的方式，对APP进行修改。工具方面可以使用IDA的keyPatch功能，至于怎么修改，反正我暂时还不会。</p>
+<h1 id="五、打包重签名"><a href="#五、打包重签名" class="headerlink" title="五、打包重签名"></a>五、打包重签名</h1><p>经过砸壳、分析、注入三步以后，我们已经得到了一份修改后的代码了。但是想要把这份代码打包成新的ipa包进行发布，就还需要进行重签名操作。开源的重签名脚本、工具很多，例如可以直接用<a href="https://github.com/DanTheMan827/ios-app-signer" target="_blank" rel="noopener">ios-app-signer</a>。</p>
+<h1 id="六、进一步深入"><a href="#六、进一步深入" class="headerlink" title="六、进一步深入"></a>六、进一步深入</h1><p>虽然因为逆向工具的丰富、自动化，砸壳、代码注入、重签名这些工作的技术难度不高了。但是要想不局限于浅层面的玩一玩，而是更进一步的深入学习，下面这几方面的能力很重要：</p>
+<ul>
+<li>iOS开发经验: 丰富的iOS开发经验真的很重要，特别是在代码的静态/动态分析阶段，有经验的开发朋友，根据类名、方法名、汇编代码，甚至字符串内容、UI层级结构这些少量细节，就能推断出大致的代码结构、逻辑</li>
+<li>底层知识: 这部分的底层知识，包括OC语言、iOS操作系统、编译器、汇编等等等等，这种平时业务开发基本用不上的底层知识，在这里却意外的很重要</li>
+</ul>
+<h1 id="七、资料工具推荐"><a href="#七、资料工具推荐" class="headerlink" title="七、资料工具推荐"></a>七、资料工具推荐</h1><ul>
+<li>iOS逆向论坛: <a href="http://iosre.com" target="_blank" rel="noopener">http://iosre.com</a></li>
+<li>MonkeyDev: 基于iOSOpenDev的一键逆向开发集成工具，<a href="https://github.com/AloneMonkey/MonkeyDev" target="_blank" rel="noopener">https://github.com/AloneMonkey/MonkeyDev</a></li>
+<li>《iOS应用逆向工程》: 我看完感觉内容有点乱，不过依旧是本好书，亚马逊上可以搜到，作者沙梓社、吴航</li>
+<li>《iOS应用逆向与安全》: MonkeyDev作者出的书，<a href="https://www.amazon.cn/dp/B07D5952BR/" target="_blank" rel="noopener">https://www.amazon.cn/dp/B07D5952BR/</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+       
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+            <a href="/tags/逆向/" rel="tag"># 逆向</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/02/19/算法学习之AVL树/" rel="next" title="算法学习之AVL树">
+                <i class="fa fa-chevron-left"></i> 算法学习之AVL树
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/20/iOS逆向学习（二）砸壳原理之dumpdecrypted/" rel="prev" title="iOS逆向学习（二）砸壳原理之dumpdecrypted">
+                iOS逆向学习（二）砸壳原理之dumpdecrypted <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ben Arvin</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v6.6.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.6.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.6.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.6.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.6.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.6.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
